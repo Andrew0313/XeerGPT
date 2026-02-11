@@ -132,7 +132,7 @@ def chat():
             conversation_id = conversation.id
             print(f"✨ Created NEW conversation: {conversation_id}")
         else:
-            conversation = Conversation.query.get(conversation_id)
+            conversation = db.session.get(Conversation, conversation_id)
             if not conversation:
                 print(f"❌ Conversation {conversation_id} not found!")
                 return jsonify({
