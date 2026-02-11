@@ -390,12 +390,14 @@ code {
     position: sticky;
     top: 0;
     z-index: 50;
+    transition: all var(--transition-base);
 }
 
 .top-bar-left {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    transition: all var(--transition-base);
 }
 
 .menu-toggle {
@@ -410,31 +412,47 @@ code {
     display: none;
     align-items: center;
     justify-content: center;
+    animation: fadeInLeft 0.4s ease;
 }
 
 .menu-toggle:hover {
     background: var(--bg-secondary);
+    transform: scale(1.1);
 }
 
 .sidebar.collapsed ~ .main-content .menu-toggle {
     display: flex;
 }
 
+.current-chat-info {
+    animation: fadeInUp 0.5s ease;
+    transition: all var(--transition-base);
+}
+
 .current-chat-info h2 {
     font-size: 1.125rem;
     margin: 0;
     color: var(--text-primary);
+    transition: color var(--transition-base);
+    animation: fadeInUp 0.5s ease;
+}
+
+.current-chat-info h2:hover {
+    color: var(--accent-primary);
 }
 
 .model-info {
     font-size: 0.75rem;
     color: var(--text-muted);
+    transition: color var(--transition-base);
+    animation: fadeInUp 0.6s ease;
 }
 
 .top-bar-right {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    animation: fadeInRight 0.5s ease;
 }
 
 .theme-toggle {
@@ -450,6 +468,57 @@ code {
 
 .theme-toggle:hover {
     background: var(--bg-secondary);
+    transform: rotate(15deg) scale(1.1);
+}
+
+/* Smooth Keyframe Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Smooth transition when sidebar collapses */
+.sidebar.collapsed ~ .main-content .current-chat-info {
+    animation: slideInFromLeft 0.4s ease;
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* ================ CHAT AREA ================ */
