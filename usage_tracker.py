@@ -1,18 +1,11 @@
 """
-Usage Tracker - Tracks API usage per provider with rate limit reset times
-FIXED VERSION - Proper persistence and date handling
-Groq: 14,400 requests/day (resets midnight UTC)
-OpenRouter: 200 requests/day free tier (resets midnight UTC)
+Usage Tracker - DATABASE-BACKED VERSION
+FIXED: Uses database instead of JSON file for persistent storage
+Survives server restarts and deployments
 """
 
-import json
-import os
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
-
-# Use absolute path to prevent file location issues
-BASE_DIR = Path(__file__).resolve().parent
-USAGE_FILE = BASE_DIR / "usage_data.json"
+from models import db, UsageTracking
 
 # Provider limits (adjust these to match your actual plan)
 PROVIDER_LIMITS = {
@@ -32,45 +25,9 @@ PROVIDER_LIMITS = {
     }
 }
 
-def _load_data():
-    """Load usage data from file with proper error handling"""
-    if not USAGE_FILE.exists():
-        print(f"📂 Creating new usage file: {USAGE_FILE}")
-        return {}
-    try:
-        with open(USAGE_FILE, "r") as f:
-            data = json.load(f)
-            print(f"📊 Loaded usage data: {data}")
-            return data
-    except json.JSONDecodeError:
-        print(f"⚠️ Corrupted usage file, resetting")
-        return {}
-    except Exception as e:
-        print(f"⚠️ Error loading usage data: {e}")
-        return {}
-
-def _save_data(data):
-    """Save usage data to file with atomic write"""
-    try:
-        # Ensure directory exists
-        USAGE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Write to temp file first, then rename (atomic)
-        temp_file = USAGE_FILE.with_suffix('.tmp')
-        with open(temp_file, "w") as f:
-            json.dump(data, f, indent=2)
-        
-        # Atomic rename
-        temp_file.replace(USAGE_FILE)
-        print(f"💾 Saved usage data: {data}")
-    except Exception as e:
-        print(f"❌ Could not save usage data: {e}")
-
-def _get_today_key():
-    """Get today's date key in UTC (YYYY-MM-DD format)"""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    print(f"📅 Today's date key: {today}")
-    return today
+def _get_today_date():
+    """Get today's date in UTC (date object, not string)"""
+    return datetime.now(timezone.utc).date()
 
 def _get_reset_time(provider_key):
     """Get the next reset datetime for a provider (midnight UTC)"""
@@ -111,81 +68,101 @@ def _format_countdown(seconds):
 def record_usage(provider_key: str):
     """
     Record one API call for the given provider
-    FIXED: Properly handles date transitions and persistence
+    FIXED: Uses database for persistence
+    
+    Args:
+        provider_key: Provider identifier ('groq', 'openrouter', etc.)
+    
+    Returns:
+        int: Current usage count for today
     """
-    data = _load_data()
-    today = _get_today_key()
-
-    # Initialize provider if not exists
-    if provider_key not in data:
-        data[provider_key] = {
-            "date": today,
-            "count": 0
-        }
-        print(f"🆕 Initialized tracking for {provider_key}")
-
-    # Check if we need to reset (new day)
-    stored_date = data[provider_key].get("date")
-    if stored_date != today:
-        print(f"🔄 New day detected for {provider_key}: {stored_date} → {today}")
-        data[provider_key] = {
-            "date": today,
-            "count": 0
-        }
-
-    # Increment count
-    old_count = data[provider_key].get("count", 0)
-    data[provider_key]["count"] = old_count + 1
+    from app import app  # Import here to avoid circular dependency
     
-    # CRITICAL: Save immediately to disk
-    _save_data(data)
-    
-    new_count = data[provider_key]["count"]
-    print(f"📈 {provider_key}: {old_count} → {new_count}")
-    
-    return new_count
+    with app.app_context():
+        today = _get_today_date()
+        
+        # Get or create usage record for this provider
+        usage = UsageTracking.query.filter_by(provider=provider_key).first()
+        
+        if usage is None:
+            # First time tracking this provider
+            usage = UsageTracking(
+                provider=provider_key,
+                date=today,
+                count=0
+            )
+            db.session.add(usage)
+            print(f"🆕 Created usage tracking for {provider_key}")
+        
+        # Check if we need to reset (new day)
+        if usage.date != today:
+            print(f"🔄 New day detected for {provider_key}: {usage.date} → {today}")
+            usage.date = today
+            usage.count = 0
+        
+        # Increment count
+        old_count = usage.count
+        usage.count += 1
+        
+        # CRITICAL: Commit to database
+        try:
+            db.session.commit()
+            print(f"📈 {provider_key}: {old_count} → {usage.count} (saved to DB)")
+        except Exception as e:
+            print(f"❌ Database error: {e}")
+            db.session.rollback()
+            raise
+        
+        return usage.count
 
 def get_usage_stats():
     """
     Return full usage stats for all providers
-    FIXED: Properly handles stale data and resets
+    FIXED: Reads from database
+    
+    Returns:
+        dict: Usage statistics for each provider
     """
-    data = _load_data()
-    today = _get_today_key()
+    from app import app  # Import here to avoid circular dependency
+    
     stats = {}
-
-    for provider_key, provider_info in PROVIDER_LIMITS.items():
-        provider_data = data.get(provider_key, {})
-
-        # Check if data is from today
-        stored_date = provider_data.get("date")
-        if stored_date != today:
-            # Stale data - reset to 0
-            count = 0
-            print(f"🔄 Resetting stale data for {provider_key}: {stored_date} → {today}")
-        else:
-            count = provider_data.get("count", 0)
-
-        limit = provider_info["daily_limit"]
-        remaining = max(0, limit - count)
-        percent_used = min(100, round((count / limit) * 100, 1))
-        seconds_left = _seconds_until_reset(provider_key)
-
-        stats[provider_key] = {
-            "display_name": provider_info["display_name"],
-            "icon": provider_info["icon"],
-            "color": provider_info["color"],
-            "used": count,
-            "limit": limit,
-            "remaining": remaining,
-            "percent_used": percent_used,
-            "percent_remaining": round(100 - percent_used, 1),
-            "reset_in_seconds": seconds_left,
-            "reset_countdown": _format_countdown(seconds_left),
-            "reset_time_local": _get_reset_time_local(provider_key),
-            "status": _get_status(percent_used)
-        }
-
+    
+    with app.app_context():
+        today = _get_today_date()
+        
+        for provider_key, provider_info in PROVIDER_LIMITS.items():
+            # Get usage from database
+            usage = UsageTracking.query.filter_by(provider=provider_key).first()
+            
+            # Check if data is from today
+            if usage is None or usage.date != today:
+                # No data or stale data - count is 0
+                count = 0
+                if usage and usage.date != today:
+                    print(f"🔄 Stale data for {provider_key}: {usage.date} → {today}")
+            else:
+                count = usage.count
+            
+            limit = provider_info["daily_limit"]
+            remaining = max(0, limit - count)
+            percent_used = min(100, round((count / limit) * 100, 1))
+            seconds_left = _seconds_until_reset(provider_key)
+            
+            stats[provider_key] = {
+                "display_name": provider_info["display_name"],
+                "icon": provider_info["icon"],
+                "color": provider_info["color"],
+                "used": count,
+                "limit": limit,
+                "remaining": remaining,
+                "percent_used": percent_used,
+                "percent_remaining": round(100 - percent_used, 1),
+                "reset_in_seconds": seconds_left,
+                "reset_countdown": _format_countdown(seconds_left),
+                "reset_time_local": _get_reset_time_local(provider_key),
+                "status": _get_status(percent_used)
+            }
+    
     return stats
 
 def _get_status(percent_used):
@@ -200,23 +177,54 @@ def _get_status(percent_used):
         return "good"
 
 def reset_provider(provider_key: str):
-    """Manually reset a provider's usage (admin use)"""
-    data = _load_data()
-    today = _get_today_key()
-    data[provider_key] = {"date": today, "count": 0}
-    _save_data(data)
-    print(f"🔄 Manually reset {provider_key}")
+    """
+    Manually reset a provider's usage (admin use)
+    
+    Args:
+        provider_key: Provider to reset
+    """
+    from app import app
+    
+    with app.app_context():
+        today = _get_today_date()
+        usage = UsageTracking.query.filter_by(provider=provider_key).first()
+        
+        if usage:
+            usage.date = today
+            usage.count = 0
+            db.session.commit()
+            print(f"🔄 Manually reset {provider_key}")
+        else:
+            # Create new record
+            usage = UsageTracking(
+                provider=provider_key,
+                date=today,
+                count=0
+            )
+            db.session.add(usage)
+            db.session.commit()
+            print(f"🆕 Created and reset {provider_key}")
 
 def get_debug_info():
     """Get debug information about usage tracking"""
-    data = _load_data()
-    today = _get_today_key()
+    from app import app
     
-    debug = {
-        "file_path": str(USAGE_FILE),
-        "file_exists": USAGE_FILE.exists(),
-        "current_utc_date": today,
-        "raw_data": data
-    }
-    
-    return debug
+    with app.app_context():
+        today = _get_today_date()
+        
+        debug = {
+            "storage": "database (SQLite)",
+            "current_utc_date": str(today),
+            "providers": {}
+        }
+        
+        all_usage = UsageTracking.query.all()
+        for usage in all_usage:
+            debug["providers"][usage.provider] = {
+                "date": str(usage.date),
+                "count": usage.count,
+                "is_today": usage.date == today,
+                "updated_at": str(usage.updated_at)
+            }
+        
+        return debug

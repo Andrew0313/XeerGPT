@@ -2,13 +2,13 @@ from flask import Flask, request, jsonify, render_template, Response, stream_wit
 from router import route_message  # Your existing router
 from llm import get_available_models  # For model list
 from datetime import datetime, timezone
-from models import db, Conversation, Message
+from models import db, Conversation, Message, UsageTracking  # ADDED UsageTracking
 import traceback
 from dotenv import load_dotenv
 import os
 import json
-import time  # ADDED for typewriter delay
-from usage_tracker import record_usage, get_usage_stats
+import time  # For typewriter delay
+from usage_tracker import record_usage, get_usage_stats  # Updated import
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,9 +20,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-# Create tables
+# Create tables (including new UsageTracking table)
 with app.app_context():
     db.create_all()
+    print("✅ Database tables created (including UsageTracking)")
 
 @app.route("/")
 def index():
@@ -153,36 +154,37 @@ def chat():
 
         # Stream the response with typewriter effect
         def generate():
+            usage_tracked = False  # Flag to ensure we only track once
+            
             try:
                 # Get full AI response
                 ai_response = route_message(message, model=model)
                 
-                # Track usage per provider (FIXED - only track once per message)
-                try:
-                    from llm import AVAILABLE_MODELS
-                    model_info = AVAILABLE_MODELS.get(model, {})
-                    provider = model_info.get("provider", "unknown")
-                    if provider in ("groq", "openrouter"):
-                        record_usage(provider)
-                        print(f"📊 Tracked usage for {provider}")
-                except Exception as e:
-                    print(f"⚠️ Usage tracking error: {e}")
-                    pass  # Never let tracking break the chat
+                # FIXED: Track usage ONCE per message (not per chunk)
+                if not usage_tracked:
+                    try:
+                        from llm import AVAILABLE_MODELS
+                        model_info = AVAILABLE_MODELS.get(model, {})
+                        provider = model_info.get("provider", "unknown")
+                        if provider in ("groq", "openrouter"):
+                            count = record_usage(provider)
+                            print(f"📊 Tracked usage for {provider} - Total: {count}")
+                            usage_tracked = True
+                    except Exception as e:
+                        print(f"⚠️ Usage tracking error: {e}")
+                        traceback.print_exc()
                 
                 # Send conversation_id first
                 yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
                 
                 # FIXED: Stream with proper delays for typewriter effect
-                # Split by words for natural reading rhythm
                 words = ai_response.split(' ')
                 for i, word in enumerate(words):
-                    # Add space back except for last word
                     chunk = word + (' ' if i < len(words) - 1 else '')
                     yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
                     
-                    # CRITICAL: Add small delay for typewriter effect
-                    # Adjust this value to control speed (0.03 = 30ms per word)
-                    time.sleep(0.03)
+                    # CRITICAL: Add delay for typewriter effect
+                    time.sleep(0.03)  # 30ms per word
                 
                 # Save AI message to database
                 ai_message = Message(
@@ -243,7 +245,7 @@ def test_keys():
         "status": "working"
     })
 
-# Usage bar endpoint
+# Usage bar endpoint - FIXED
 @app.route("/api/usage", methods=["GET"])
 def get_usage():
     """Return current API usage stats for the usage bar"""
@@ -254,8 +256,23 @@ def get_usage():
             "stats": stats
         })
     except Exception as e:
+        print(f"❌ Usage stats error: {e}")
+        traceback.print_exc()
         return jsonify({
             "success": False,
+            "error": str(e)
+        }), 500
+
+# DEBUG: Check usage tracking database
+@app.route("/api/usage/debug", methods=["GET"])
+def usage_debug():
+    """Debug endpoint to check usage tracking"""
+    try:
+        from usage_tracker import get_debug_info
+        debug_info = get_debug_info()
+        return jsonify(debug_info)
+    except Exception as e:
+        return jsonify({
             "error": str(e)
         }), 500
 
