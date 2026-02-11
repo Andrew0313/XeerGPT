@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, render_template
 from router import route_message  # Your existing router
-from llm import get_available_models  # NEW - for model list
+from llm import get_available_models  # For model list
 from datetime import datetime
 from models import db, Conversation, Message
 import traceback
 from dotenv import load_dotenv
+import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,7 +29,7 @@ def index():
 def chat_page():
     return render_template("chat.html")
 
-# NEW ENDPOINT - Get available AI models
+# Get available AI models
 @app.route("/api/models", methods=["GET"])
 def get_models():
     """Return all available AI providers and models"""
@@ -107,14 +108,14 @@ def clear_all():
     db.session.commit()
     return jsonify({"success": True})
 
-# Chat endpoint - UPDATED with model support
+# Chat endpoint - with model support
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
         data = request.get_json()
         message = data.get("message", "")
         conversation_id = data.get("conversation_id")
-        model = data.get("model", "gemini-2.0-flash")  # NEW - get model from request
+        model = data.get("model", "llama-3.1-70b")  # Default model
         
         print(f"📨 Message: '{message[:50]}...'")
         print(f"📋 Conversation ID: {conversation_id}")
@@ -202,7 +203,18 @@ def chat():
             "response": "I'm having trouble connecting right now. Please check your connection and try again."
         }), 200
 
+# Test endpoint to check API keys loaded
+@app.route("/api/test-keys")
+def test_keys():
+    """Test endpoint to check how many keys are loaded"""
+    from llm import groq_clients, openrouter_clients
+    return jsonify({
+        "groq_keys": len(groq_clients),
+        "openrouter_keys": len(openrouter_clients),
+        "status": "working"
+    })
+
 if __name__ == "__main__":
-    import os
+    # FIXED: Proper port binding for Render
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)

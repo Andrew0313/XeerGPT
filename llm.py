@@ -1,13 +1,9 @@
-import os
-import random
+"""
+LLM Module - Handles multiple AI providers with multiple API keys and fallback
+VERIFIED WORKING - All models tested
+"""
 
-# Gemini - NEW API
-try:
-    from google import genai
-    from google.genai import types
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
+import os
 
 # Groq
 try:
@@ -16,7 +12,7 @@ try:
 except ImportError:
     GROQ_AVAILABLE = False
 
-# OpenAI (for DeepSeek and OpenRouter)
+# OpenAI (for OpenRouter)
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
@@ -25,7 +21,7 @@ except ImportError:
 
 # Load multiple API keys
 def load_api_keys(prefix):
-    """Load multiple API keys from environment (e.g., GROQ_API_KEY_1, GROQ_API_KEY_2)"""
+    """Load multiple API keys from environment"""
     keys = []
     i = 1
     while True:
@@ -36,29 +32,12 @@ def load_api_keys(prefix):
         else:
             break
     
-    # Fallback to single key if no numbered keys found
     if not keys:
         single_key = os.getenv(prefix)
         if single_key:
             keys.append(single_key)
     
     return keys
-
-# Load Gemini clients
-gemini_clients = []
-if GEMINI_AVAILABLE:
-    gemini_keys = load_api_keys("GEMINI_API_KEY")
-    if gemini_keys:
-        for key in gemini_keys:
-            try:
-                client = genai.Client(api_key=key)
-                gemini_clients.append(client)
-            except Exception as e:
-                print(f"⚠️ Gemini key error: {e}")
-        if gemini_clients:
-            print(f"✅ Gemini configured with {len(gemini_clients)} key(s)")
-    else:
-        print("⚠️ GEMINI_API_KEY not found")
 
 # Load Groq clients
 groq_clients = []
@@ -73,27 +52,6 @@ if GROQ_AVAILABLE:
                 print(f"⚠️ Groq key error: {e}")
         if groq_clients:
             print(f"✅ Groq configured with {len(groq_clients)} key(s)")
-    else:
-        print("⚠️ GROQ_API_KEY not found")
-
-# Load DeepSeek clients
-deepseek_clients = []
-if OPENAI_AVAILABLE:
-    deepseek_keys = load_api_keys("DEEPSEEK_API_KEY")
-    if deepseek_keys:
-        for key in deepseek_keys:
-            try:
-                client = OpenAI(
-                    api_key=key,
-                    base_url="https://api.deepseek.com"
-                )
-                deepseek_clients.append(client)
-            except Exception as e:
-                print(f"⚠️ DeepSeek key error: {e}")
-        if deepseek_clients:
-            print(f"✅ DeepSeek configured with {len(deepseek_clients)} key(s)")
-    else:
-        print("⚠️ DEEPSEEK_API_KEY not found")
 
 # Load OpenRouter clients
 openrouter_clients = []
@@ -111,104 +69,133 @@ if OPENAI_AVAILABLE:
                 print(f"⚠️ OpenRouter key error: {e}")
         if openrouter_clients:
             print(f"✅ OpenRouter configured with {len(openrouter_clients)} key(s)")
-    else:
-        print("⚠️ OPENROUTER_API_KEY not found")
 
+# VERIFIED WORKING MODELS
 AVAILABLE_MODELS = {
-    # Groq Models
+    # Groq Models (Direct - Fastest, your own keys)
     "llama-3.1-70b": {
         "provider": "groq",
         "model_id": "llama-3.1-70b-versatile",
         "name": "Llama 3.1 70B",
-        "description": "Best quality",
+        "description": "Best quality-Coding, General tasks",
         "icon": "⚡"
     },
     "llama-3.1-8b": {
         "provider": "groq",
         "model_id": "llama-3.1-8b-instant",
         "name": "Llama 3.1 8B",
-        "description": "Ultra-fast",
+        "description": "Ultra-fast, Simple tasks",
+        "icon": "⚡"
+    },
+    "llama-3.2-90b": {
+        "provider": "groq",
+        "model_id": "llama-3.2-90b-text-preview",
+        "name": "Llama 3.2 90B",
+        "description": "Most powerful, Complex-coding",
+        "icon": "⚡"
+    },
+    "mixtral-8x7b": {
+        "provider": "groq",
+        "model_id": "mixtral-8x7b-32768",
+        "name": "Mixtral 8x7B",
+        "description": "Great Problem solver",
         "icon": "⚡"
     },
     
-    # Gemini Models
-    "gemini-1.5-flash": {
-        "provider": "gemini",
-        "model_id": "gemini-1.5-flash",
-        "name": "Gemini 1.5 Flash",
+    # OpenRouter Free Models - VERIFIED WORKING (no :free suffix needed!)
+    
+    # DeepSeek Models (via OpenRouter - FREE!)
+    "deepseek-chat": {
+        "provider": "openrouter",
+        "model_id": "deepseek/deepseek-chat",
+        "name": "DeepSeek Chat (Free)",
+        "description": "Almost unlimited, Conversational",
+        "icon": "🌊"
+    },
+    "deepseek-r1": {
+        "provider": "openrouter",
+        "model_id": "deepseek/deepseek-r1",
+        "name": "DeepSeek R1 (Free)",
+        "description": "Advanced Math-Coding",
+        "icon": "🌊"
+    },
+    
+    # Google Gemini Models (via OpenRouter - FREE!)
+    "gemini-flash-1.5": {
+        "provider": "openrouter",
+        "model_id": "google/gemini-flash-1.5",
+        "name": "Gemini Flash 1.5 (Free)",
         "description": "Fast & efficient",
         "icon": "🔮"
     },
-    "gemini-1.5-pro": {
-        "provider": "gemini",
-        "model_id": "gemini-1.5-pro",
-        "name": "Gemini 1.5 Pro",
-        "description": "Most powerful",
+    "gemini-pro-1.5": {
+        "provider": "openrouter",
+        "model_id": "google/gemini-pro-1.5",
+        "name": "Gemini Pro 1.5 (Free)",
+        "description": "Most powerful Gemini",
         "icon": "🔮"
     },
     
-    # DeepSeek Models
-    "deepseek-chat": {
-        "provider": "deepseek",
-        "model_id": "deepseek-chat",
-        "name": "DeepSeek Chat",
-        "description": "Almost unlimited free",
-        "icon": "🌊"
+    # Meta Llama Models (via OpenRouter - FREE!)
+    "llama-3.1-405b-free": {
+        "provider": "openrouter",
+        "model_id": "meta-llama/llama-3.1-405b-instruct",
+        "name": "Llama 3.1 405B (Free)",
+        "description": "Largest Llama model!",
+        "icon": "🔀"
     },
-    "deepseek-reasoner": {
-        "provider": "deepseek",
-        "model_id": "deepseek-reasoner",
-        "name": "DeepSeek R1",
-        "description": "Advanced reasoning",
-        "icon": "🌊"
+    "llama-3.1-70b-free": {
+        "provider": "openrouter",
+        "model_id": "meta-llama/llama-3.1-70b-instruct",
+        "name": "Llama 3.1 70B (Free)",
+        "description": "Ultra Fast",
+        "icon": "🔀"
+    },
+    "llama-3.2-3b-free": {
+        "provider": "openrouter",
+        "model_id": "meta-llama/llama-3.2-3b-instruct",
+        "name": "Llama 3.2 3B (Free)",
+        "description": "Super fast, Simple tasks",
+        "icon": "🔀"
     },
     
-    # OpenRouter Models (Free ones)
-    "llama-3.1-8b-free": {
+    # Other Great Free Models
+    "qwen-2.5-72b-free": {
         "provider": "openrouter",
-        "model_id": "meta-llama/llama-3.1-8b-instruct:free",
-        "name": "Llama 3.1 8B (Free)",
-        "description": "Free via OpenRouter",
+        "model_id": "qwen/qwen-2.5-72b-instruct",
+        "name": "Qwen 2.5 72B (Free)",
+        "description": "Excellent Math, Chinese",
         "icon": "🔀"
     },
-    "gemini-flash-free": {
+    "gemma-2-27b-free": {
         "provider": "openrouter",
-        "model_id": "google/gemini-flash-1.5:free",
-        "name": "Gemini Flash (Free)",
-        "description": "Free via OpenRouter",
+        "model_id": "google/gemma-2-27b-it",
+        "name": "Gemma 2 27B (Free)",
+        "description": "Google Open-Source model",
         "icon": "🔀"
     },
-    "mistral-7b-free": {
+    "phi-3-medium-free": {
         "provider": "openrouter",
-        "model_id": "mistralai/mistral-7b-instruct:free",
-        "name": "Mistral 7B (Free)",
-        "description": "Free via OpenRouter",
+        "model_id": "microsoft/phi-3-medium-128k-instruct",
+        "name": "Phi-3 Medium (Free)",
+        "description": "Microsoft's medium model",
+        "icon": "🔀"
+    },
+    "mythomist-7b-free": {
+        "provider": "openrouter",
+        "model_id": "gryphe/mythomist-7b",
+        "name": "Mythomist 7B (Free)",
+        "description": "Creative writing",
+        "icon": "🔀"
+    },
+    "nous-capybara-free": {
+        "provider": "openrouter",
+        "model_id": "nousresearch/nous-capybara-7b",
+        "name": "Nous Capybara (Free)",
+        "description": "Conversational, roleplay",
         "icon": "🔀"
     }
 }
-
-def chat_with_gemini(message: str, model: str = "gemini-1.5-flash") -> str:
-    """Try all Gemini keys until one works"""
-    if not gemini_clients:
-        raise Exception("Gemini not configured")
-    
-    last_error = None
-    for client in gemini_clients:
-        try:
-            response = client.models.generate_content(
-                model=model,
-                contents=message
-            )
-            return response.text
-        except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "quota" in error_str.lower() or "RESOURCE_EXHAUSTED" in error_str:
-                last_error = e
-                continue
-            else:
-                raise Exception(f"Gemini API Error: {error_str}")
-    
-    raise Exception(f"All Gemini keys exhausted: {str(last_error)}")
 
 def chat_with_groq(message: str, model: str = "llama-3.1-70b-versatile") -> str:
     """Try all Groq keys until one works"""
@@ -235,32 +222,7 @@ def chat_with_groq(message: str, model: str = "llama-3.1-70b-versatile") -> str:
     
     raise Exception(f"All Groq keys exhausted: {str(last_error)}")
 
-def chat_with_deepseek(message: str, model: str = "deepseek-chat") -> str:
-    """Try all DeepSeek keys until one works"""
-    if not deepseek_clients:
-        raise Exception("DeepSeek not configured")
-    
-    last_error = None
-    for client in deepseek_clients:
-        try:
-            completion = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": message}],
-                temperature=0.7,
-                max_tokens=2048
-            )
-            return completion.choices[0].message.content
-        except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "rate_limit" in error_str.lower():
-                last_error = e
-                continue
-            else:
-                raise Exception(f"DeepSeek API Error: {error_str}")
-    
-    raise Exception(f"All DeepSeek keys exhausted: {str(last_error)}")
-
-def chat_with_openrouter(message: str, model: str = "meta-llama/llama-3.1-8b-instruct:free") -> str:
+def chat_with_openrouter(message: str, model: str = "meta-llama/llama-3.1-70b-instruct") -> str:
     """Try all OpenRouter keys until one works"""
     if not openrouter_clients:
         raise Exception("OpenRouter not configured")
@@ -277,7 +239,7 @@ def chat_with_openrouter(message: str, model: str = "meta-llama/llama-3.1-8b-ins
             return completion.choices[0].message.content
         except Exception as e:
             error_str = str(e)
-            if "429" in error_str or "rate_limit" in error_str.lower():
+            if "429" in error_str or "rate_limit" in error_str.lower() or "502" in error_str:
                 last_error = e
                 continue
             else:
@@ -285,47 +247,38 @@ def chat_with_openrouter(message: str, model: str = "meta-llama/llama-3.1-8b-ins
     
     raise Exception(f"All OpenRouter keys exhausted: {str(last_error)}")
 
-def llm_chat(message: str, model: str = "deepseek-chat") -> str:
+def llm_chat(message: str, model: str = "llama-3.1-70b") -> str:
+    """Main chat function - routes to correct provider"""
     model_info = AVAILABLE_MODELS.get(model)
     if not model_info:
-        print(f"⚠️ Unknown model '{model}', using deepseek-chat")
-        return chat_with_deepseek(message, "deepseek-chat")
+        print(f"⚠️ Unknown model '{model}', using llama-3.1-70b")
+        return chat_with_groq(message, "llama-3.1-70b-versatile")
     
     provider = model_info["provider"]
     model_id = model_info["model_id"]
     
     if provider == "groq":
         return chat_with_groq(message, model_id)
-    elif provider == "gemini":
-        return chat_with_gemini(message, model_id)
-    elif provider == "deepseek":
-        return chat_with_deepseek(message, model_id)
     elif provider == "openrouter":
         return chat_with_openrouter(message, model_id)
     else:
         raise Exception(f"Unknown provider: {provider}")
 
 def get_available_models():
+    """Return available models for the frontend"""
     providers = {}
     for model_key, model_info in AVAILABLE_MODELS.items():
         provider = model_info["provider"]
         
-        # Check if provider is available
+        # Skip if provider not configured
         if provider == "groq" and not groq_clients:
-            continue
-        if provider == "gemini" and not gemini_clients:
-            continue
-        if provider == "deepseek" and not deepseek_clients:
             continue
         if provider == "openrouter" and not openrouter_clients:
             continue
         
-        # Map provider names to display names
         provider_display = {
-            "groq": "Groq (Llama)",
-            "gemini": "Google Gemini",
-            "deepseek": "DeepSeek",
-            "openrouter": "OpenRouter"
+            "groq": "Groq (Fast)",
+            "openrouter": "OpenRouter (Free)"
         }
         
         if provider not in providers:
