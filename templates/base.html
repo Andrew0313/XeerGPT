@@ -158,6 +158,24 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.body.classList.add('loaded');
 });
+
+// Close sidebar when clicking outside of it
+document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebarToggleInside = document.getElementById('sidebarToggleInside');
+    
+    // If sidebar is open AND click is outside sidebar AND not on toggle buttons
+    if (!sidebar.classList.contains('collapsed') &&
+        !sidebar.contains(e.target) &&
+        !menuToggle.contains(e.target)) {
+        
+        // Collapse it
+        sidebar.classList.add('collapsed');
+        sidebarToggleInside.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        localStorage.setItem('xeergpt_sidebar', 'closed');
+    }
+});
 </script>
 </body>
 </html>
