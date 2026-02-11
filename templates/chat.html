@@ -199,7 +199,7 @@
         margin: 8px 0;
     }
 
-    /* Scrollbar for dropdown */
+    /* Model Dropdown Scrollbar - Dark Theme */
     .model-dropdown::-webkit-scrollbar {
         width: 6px;
     }
@@ -215,6 +215,25 @@
 
     .model-dropdown::-webkit-scrollbar-thumb:hover {
         background: var(--border-dark);
+    }
+
+    /* Firefox */
+    .model-dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-light) var(--bg-secondary);
+    }
+
+    /* Light Theme */
+    [data-theme="light"] .model-dropdown::-webkit-scrollbar-thumb {
+        background: var(--border-dark);
+    }
+
+    [data-theme="light"] .model-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
+
+    [data-theme="light"] .model-dropdown {
+        scrollbar-color: var(--border-dark) var(--bg-secondary);
     }
 </style>
 {% endblock %}

@@ -63,8 +63,12 @@
                 // Provider header
                 const header = document.createElement('div');
                 header.className = 'model-dropdown-header';
+                
+                // Get the first model's icon for the provider header (or use a default)
+                const firstModelIcon = Object.values(providerData.models)[0]?.icon || '🤖';
+                
                 header.innerHTML = `
-                    <span>${providerData.icon}</span>
+                    <span>${firstModelIcon}</span>
                     <span>${providerData.display_name}</span>
                 `;
                 this.modelDropdown.appendChild(header);
@@ -81,7 +85,7 @@
                     }
                     
                     item.innerHTML = `
-                        <span class="model-item-icon">${providerData.icon}</span>
+                        <span class="model-item-icon">${modelInfo.icon}</span>
                         <div class="model-item-info">
                             <div class="model-item-name">${modelInfo.name}</div>
                             <div class="model-item-desc">${modelInfo.description}</div>
@@ -90,7 +94,7 @@
                     `;
                     
                     item.addEventListener('click', () => {
-                        this.selectModel(modelKey, providerData.icon, modelInfo.name);
+                        this.selectModel(modelKey, modelInfo.icon, modelInfo.name);
                         this.closeModelDropdown();
                     });
                     
@@ -125,7 +129,7 @@
                 // Find current model info
                 for (const provider of Object.values(this.availableModels)) {
                     if (provider.models[this.selectedModel]) {
-                        icon = provider.icon;
+                        icon = provider.models[this.selectedModel].icon;
                         name = provider.models[this.selectedModel].name;
                         break;
                     }
@@ -137,7 +141,7 @@
             }
             if (this.selectedModelName) {
                 // Shorten name for button
-                const shortName = name ? name.replace('Gemini ', '').replace('Llama ', '') : 'Model';
+                const shortName = name ? name.replace('Gemini ', '').replace('Llama ', '').replace('DeepSeek ', '') : 'Model';
                 this.selectedModelName.textContent = shortName;
             }
         }
