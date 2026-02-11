@@ -1,0 +1,260 @@
+/* =============================================
+   XeerGPT Usage Bar - Compact Sidebar Panel
+   ============================================= */
+
+.usage-panel {
+    margin: 0 var(--spacing-md) var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    transition: all 0.3s ease;
+}
+
+.usage-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.usage-panel-title {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.usage-panel-title i {
+    font-size: 0.65rem;
+    opacity: 0.7;
+}
+
+.usage-refresh-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.usage-refresh-btn:hover {
+    color: var(--accent-primary);
+    background: rgba(16, 163, 127, 0.1);
+    transform: rotate(30deg);
+}
+
+.usage-refresh-btn.spinning {
+    animation: spin 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Individual provider row */
+.usage-provider {
+    margin-bottom: 10px;
+}
+
+.usage-provider:last-child {
+    margin-bottom: 0;
+}
+
+.usage-provider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.usage-provider-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.usage-provider-icon {
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.usage-percent-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Color states */
+.usage-percent-badge.status-good {
+    background: rgba(16, 163, 127, 0.15);
+    color: #10a37f;
+}
+
+.usage-percent-badge.status-moderate {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.usage-percent-badge.status-warning {
+    background: rgba(239, 116, 22, 0.15);
+    color: #ef7416;
+}
+
+.usage-percent-badge.status-critical {
+    background: rgba(239, 68, 68, 0.18);
+    color: #ef4444;
+    animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Progress bar track */
+.usage-bar-track {
+    height: 5px;
+    background: var(--bg-tertiary);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+/* Progress bar fill */
+.usage-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated shimmer on fill */
+.usage-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -60%; }
+    100% { left: 160%; }
+}
+
+/* Bar fill colors by status */
+.usage-bar-fill.status-good {
+    background: linear-gradient(90deg, #10a37f, #15b388);
+}
+
+.usage-bar-fill.status-moderate {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.usage-bar-fill.status-warning {
+    background: linear-gradient(90deg, #ef7416, #f97316);
+}
+
+.usage-bar-fill.status-critical {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* Meta line: remaining + reset */
+.usage-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.usage-remaining {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.usage-remaining .remaining-count {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.usage-reset {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-muted);
+}
+
+.usage-reset i {
+    font-size: 0.6rem;
+    opacity: 0.7;
+}
+
+/* Countdown timer — ticks every second */
+.countdown-timer {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* Divider between providers */
+.usage-provider-divider {
+    height: 1px;
+    background: var(--border-dark);
+    margin: 8px 0;
+    opacity: 0.5;
+}
+
+/* Loading skeleton */
+.usage-skeleton {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.usage-skeleton-bar {
+    height: 5px;
+    background: var(--border-light);
+    border-radius: 100px;
+    margin: 6px 0 4px;
+}
+
+.usage-skeleton-text {
+    height: 8px;
+    background: var(--border-light);
+    border-radius: 4px;
+    width: 60%;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Collapsed sidebar: hide usage panel */
+.sidebar.collapsed .usage-panel {
+    display: none;
+}
+
+/* Tooltip on hover (% label) */
+.usage-provider-label[title] {
+    cursor: default;
+}

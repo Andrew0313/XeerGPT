@@ -6,6 +6,7 @@ from models import db, Conversation, Message
 import traceback
 from dotenv import load_dotenv
 import os
+from usage_tracker import record_usage, get_usage_stats
 
 # Load environment variables from .env file
 load_dotenv()
@@ -151,6 +152,18 @@ def chat():
         # Get AI response using selected model (via your existing router)
         try:
             ai_response = route_message(message, model=model)
+
+            # ── Track usage per provider ──────────────────────────────
+            try:
+                from llm import AVAILABLE_MODELS
+                model_info = AVAILABLE_MODELS.get(model, {})
+                provider = model_info.get("provider", "unknown")
+                if provider in ("groq", "openrouter"):
+                    record_usage(provider)
+            except Exception:
+                pass  # Never let tracking break the chat
+            # ─────────────────────────────────────────────────────────
+
         except Exception as e:
             error_str = str(e)
             print(f"AI Error: {e}")
@@ -213,6 +226,22 @@ def test_keys():
         "openrouter_keys": len(openrouter_clients),
         "status": "working"
     })
+
+# Usage bar endpoint
+@app.route("/api/usage", methods=["GET"])
+def get_usage():
+    """Return current API usage stats for the usage bar"""
+    try:
+        stats = get_usage_stats()
+        return jsonify({
+            "success": True,
+            "stats": stats
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 if __name__ == "__main__":
     # FIXED: Proper port binding for Render
