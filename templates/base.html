@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}XeerGPT{% endblock %}</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='UniversalSearchIndicator.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='AddOn_ChtHistry_DB_CpyBtn.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ChatUI.css') }}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar - CHAT HISTORY ONLY -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="sidebar-toggle-inside" id="sidebarToggleInside">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="app-logo">
+                    <div class="logo-icon">X</div>
+                    <h1>Xeer<span>GPT</span></h1>
+                </div>
+                <button class="new-chat-btn" id="newChatBtn">
+                    <i class="fas fa-plus"></i> New chat
+                </button>
+            </div>
+            
+            <!-- CHAT HISTORY -->
+            <div class="chat-history">
+                <div class="history-header">
+                    <h3>Conversations</h3>
+                </div>
+                <div class="history-items" id="historyItems">
+                    <div class="history-item active">
+                        <i class="fas fa-message"></i>
+                        <span>New Conversation</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="username">User</span>
+                    </div>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="current-chat-info">
+                        <h2>XeerGPT</h2>
+                        <span class="model-info">Advanced AI Assistant</span>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Chat Area -->
+            <div class="chat-area">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    {% block extra_scripts %}{% endblock %}
+    
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('xeergpt_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    const themeIcon = document.querySelector('#themeToggle i');
+    if (themeIcon) {
+        themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+    
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggleInside = document.getElementById('sidebarToggleInside');
+    const menuToggle = document.getElementById('menuToggle');
+    
+    const savedSidebarState = localStorage.getItem('xeergpt_sidebar') || 'open';
+    if (savedSidebarState === 'closed') {
+        sidebar.classList.add('collapsed');
+        if (sidebarToggleInside) {
+            sidebarToggleInside.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        }
+    }
+    
+    function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        
+        if (sidebarToggleInside) {
+            sidebarToggleInside.innerHTML = isCollapsed ? 
+                '<i class="fas fa-chevron-right"></i>' : 
+                '<i class="fas fa-chevron-left"></i>';
+        }
+        
+        localStorage.setItem('xeergpt_sidebar', isCollapsed ? 'closed' : 'open');
+    }
+    
+    if (sidebarToggleInside) {
+        sidebarToggleInside.addEventListener('click', toggleSidebar);
+    }
+    
+    if (menuToggle) {
+        menuToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('xeergpt_theme', newTheme);
+        
+        const icon = document.querySelector('#themeToggle i');
+        if (icon) {
+            icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+    });
+    
+    document.getElementById('newChatBtn').addEventListener('click', () => {
+        if (window.xeerGPT) {
+            window.xeerGPT.createNewChat();
+        }
+    });
+    
+    document.body.classList.add('loaded');
+});
+</script>
+</body>
+</html>

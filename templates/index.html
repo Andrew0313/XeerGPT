@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XeerGPT - Advanced AI Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <h1>Xeer<span class="gradient-text">GPT</span></h1>
+                </div>
+                <div class="version">v1.0.0</div>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#demo" class="nav-link">Try Demo</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="/chat" class="nav-link primary-btn">Start Chatting <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="badge">
+                    <i class="fas fa-star"></i>
+                    <span>Advanced AI Chatbot</span>
+                </div>
+                <h2 class="hero-title">Experience the Future of <span class="gradient-text">Conversational AI</span></h2>
+                <p class="hero-description">
+                    XeerGPT is an intelligent chatbot that understands context, learns from interactions, 
+                    and provides meaningful conversations. Powered by advanced algorithms and natural language processing.
+                </p>
+                <div class="hero-actions">
+                    <a href="/chat" class="primary-btn large-btn">
+                        <i class="fas fa-comment-dots"></i> Start Free Chat
+                    </a>
+                    <a href="#features" class="secondary-btn large-btn">
+                        <i class="fas fa-list"></i> View Features
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">1000+</div>
+                        <div class="stat-label">Conversations</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Availability</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">99%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="chat-preview">
+                    <div class="chat-message user">
+                        <div class="avatar user-avatar">U</div>
+                        <div class="message-content">Can you help me learn Python?</div>
+                    </div>
+                    <div class="chat-message bot">
+                        <div class="avatar bot-avatar">X</div>
+                        <div class="message-content">Absolutely! Python is great for beginners. Let's start with a simple "Hello World" program...</div>
+                    </div>
+                    <div class="chat-message user">
+                        <div class="avatar user-avatar">U</div>
+                        <div class="message-content">Show me an example</div>
+                    </div>
+                    <div class="chat-message bot">
+                        <div class="avatar bot-avatar">X</div>
+                        <div class="message-content">
+                            <code>print("Hello, World!")</code>
+                            This will output: Hello, World!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Advanced <span class="gradient-text">Features</span></h2>
+                <p>Discover what makes XeerGPT unique</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Context Awareness</h3>
+                    <p>Remembers conversation context and provides relevant responses based on previous interactions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Learning Engine</h3>
+                    <p>Continuously improves from interactions and adapts to user preferences and conversation styles.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Programming Help</h3>
+                    <p>Provides code examples, debugging help, and explanations for multiple programming languages.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Emotional Intelligence</h3>
+                    <p>Understands emotional context and responds appropriately to user mood and tone.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>Conversation History</h3>
+                    <p>Saves chat history and allows export for continued conversations across sessions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Fast Responses</h3>
+                    <p>Real-time processing with typing indicators for natural conversation flow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo" id="demo">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Try <span class="gradient-text">XeerGPT</span> Now</h2>
+                <p>Experience intelligent conversation in real-time</p>
+            </div>
+            <div class="demo-container">
+                <div class="demo-info">
+                    <h3>Ready to chat?</h3>
+                    <p>Start a conversation with XeerGPT. Ask about programming, learning, creative writing, or just have a friendly chat.</p>
+                    <ul class="demo-features">
+                        <li><i class="fas fa-check-circle"></i> No registration required</li>
+                        <li><i class="fas fa-check-circle"></i> Free to use</li>
+                        <li><i class="fas fa-check-circle"></i> Privacy focused</li>
+                        <li><i class="fas fa-check-circle"></i> Multi-topic conversations</li>
+                    </ul>
+                    <a href="/chat" class="primary-btn large-btn">
+                        <i class="fas fa-rocket"></i> Launch Chat Interface
+                    </a>
+                </div>
+                <div class="demo-preview">
+                    <div class="quick-chat">
+                        <h4>Quick Start Examples:</h4>
+                        <div class="quick-questions">
+                            <button class="quick-question" data-question="Explain artificial intelligence">
+                                🤖 Explain AI
+                            </button>
+                            <button class="quick-question" data-question="Show me a Python example">
+                                🐍 Python Example
+                            </button>
+                            <button class="quick-question" data-question="Tell me a story">
+                                📖 Tell a Story
+                            </button>
+                            <button class="quick-question" data-question="What can you do?">
+                                ❓ Your Capabilities
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <h2>Xeer<span class="gradient-text">GPT</span></h2>
+                </div>
+                <p>Advanced Conversational AI for the Modern World</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <a href="/chat">Chat Interface</a>
+                    <a href="#features">Features</a>
+                    <a href="#demo">Demo</a>
+                    <a href="#">API Documentation</a>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <a href="#about">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 XeerAI Systems. All rights reserved.</p>
+            <p>Built with ❤️ for the AI community</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Quick chat buttons
+        document.querySelectorAll('.quick-question').forEach(button => {
+            button.addEventListener('click', function() {
+                const question = this.getAttribute('data-question');
+                window.location.href = `/chat?q=${encodeURIComponent(question)}`;
+            });
+        });
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            themeToggle.innerHTML = document.body.dataset.theme === 'dark' 
+                ? '<i class="fas fa-moon"></i>' 
+                : '<i class="fas fa-sun"></i>';
+        });
+    </script>
+</body>
+</html>

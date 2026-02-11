@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with XeerGPT{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Chat container */
+    .chat-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .messages-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        padding-bottom: 120px;
+    }
+    
+    .input-container {
+        position: fixed;
+        bottom: 0;
+        left: 260px;
+        right: 0;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-light);
+        padding: 20px;
+        z-index: 100;
+        transition: left 0.3s ease;
+    }
+
+    .sidebar.collapsed ~ .main-content .input-container {
+        left: 0;
+    }
+    
+    .input-wrapper {
+        max-width: 768px;
+        margin: 0 auto;
+        position: relative;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    /* Model selector beside send button */
+    .model-selector-dropdown {
+        position: relative;
+    }
+
+    .model-selector-btn {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 10px 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        min-width: 140px;
+        height: 40px;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .model-selector-btn:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+    }
+
+    .model-selector-btn .model-icon {
+        font-size: 1.1rem;
+    }
+
+    .model-selector-btn .model-name-short {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .model-selector-btn .chevron {
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        transition: transform 0.2s ease;
+    }
+
+    .model-selector-btn.open .chevron {
+        transform: rotate(180deg);
+    }
+
+    /* Model dropdown panel */
+    .model-dropdown {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        right: 0;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 8px;
+        min-width: 280px;
+        max-height: 400px;
+        overflow-y: auto;
+        box-shadow: 0 -8px 24px rgba(0,0,0,0.25);
+        display: none;
+        z-index: 1000;
+    }
+
+    .model-dropdown.open {
+        display: block;
+        animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .model-dropdown-header {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        padding: 8px 12px 6px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .model-group {
+        margin-bottom: 8px;
+    }
+
+    .model-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .model-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .model-item:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .model-item.selected {
+        background: rgba(16, 163, 127, 0.12);
+    }
+
+    .model-item-icon {
+        font-size: 1.1rem;
+    }
+
+    .model-item-info {
+        flex: 1;
+    }
+
+    .model-item-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .model-item-desc {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .model-item-check {
+        color: var(--accent-primary);
+        font-size: 0.8rem;
+        opacity: 0;
+    }
+
+    .model-item.selected .model-item-check {
+        opacity: 1;
+    }
+
+    .model-divider {
+        height: 1px;
+        background: var(--border-light);
+        margin: 8px 0;
+    }
+
+    /* Scrollbar for dropdown */
+    .model-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .model-dropdown::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+
+    .model-dropdown::-webkit-scrollbar-thumb {
+        background: var(--border-light);
+        border-radius: 3px;
+    }
+
+    .model-dropdown::-webkit-scrollbar-thumb:hover {
+        background: var(--border-dark);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content">
+            <div class="welcome-icon">
+                <div class="logo-icon-large">X</div>
+            </div>
+            <h1>Welcome to XeerGPT</h1>
+            <p class="welcome-subtitle">Your advanced AI assistant powered by multiple AI providers.</p>
+            
+            <div class="quick-starters">
+                <div class="quick-starter-card">
+                    <div class="card-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Programming Help</h3>
+                    <p>Get code examples and debugging assistance</p>
+                    <button class="starter-btn" data-prompt="Write a Python function to calculate factorial">
+                        <span>Python Example</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <div class="quick-starter-card">
+                    <div class="card-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3>Learn AI Concepts</h3>
+                    <p>Understand complex topics with simple explanations</p>
+                    <button class="starter-btn" data-prompt="Explain neural networks in simple terms">
+                        <span>Neural Networks</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <div class="quick-starter-card">
+                    <div class="card-icon">
+                        <i class="fas fa-pen-fancy"></i>
+                    </div>
+                    <h3>Creative Writing</h3>
+                    <p>Generate stories, content, and creative ideas</p>
+                    <button class="starter-btn" data-prompt="Write a short story about a robot learning emotions">
+                        <span>AI Story</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="capabilities-list">
+                <h3>What I can help with:</h3>
+                <div class="capabilities">
+                    <span class="capability"><i class="fas fa-check"></i> Code generation & debugging</span>
+                    <span class="capability"><i class="fas fa-check"></i> Learning & explanations</span>
+                    <span class="capability"><i class="fas fa-check"></i> Creative writing</span>
+                    <span class="capability"><i class="fas fa-check"></i> Problem solving</span>
+                    <span class="capability"><i class="fas fa-check"></i> Multiple AI models</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Messages Container -->
+    <div class="messages-container" id="messagesContainer" style="display: none;">
+        <div class="messages" id="messages"></div>
+        
+        <!-- Bottom Input Area with Model Selector -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <div class="input-box">
+                    <textarea 
+                        id="userInput" 
+                        placeholder="Message XeerGPT..."
+                        rows="1"
+                        autocomplete="off"
+                        spellcheck="true"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button class="input-action-btn" id="voiceBtn" title="Voice input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MODEL SELECTOR DROPDOWN -->
+                <div class="model-selector-dropdown">
+                    <button class="model-selector-btn" id="modelSelectorBtn">
+                        <span class="model-icon" id="selectedModelIcon">🔮</span>
+                        <span class="model-name-short" id="selectedModelName">Gemini Flash</span>
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    
+                    <div class="model-dropdown" id="modelDropdown">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <button class="send-btn" id="sendBtn" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <div class="input-footer">
+                <p class="disclaimer">
+                    XeerGPT can make mistakes. Consider checking important information.
+                </p>
+                <div class="suggestions" id="suggestions">
+                    <button class="suggestion-btn" data-prompt="Explain Python functions">Python Functions</button>
+                    <button class="suggestion-btn" data-prompt="What is machine learning?">Machine Learning</button>
+                    <button class="suggestion-btn" data-prompt="Write a JavaScript function">JavaScript</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Typing Indicator -->
+<div class="typing-indicator" id="typingIndicator" style="display: none;">
+    <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <span class="typing-text">XeerGPT is thinking...</span>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Load AddOn script -->
+<script src="{{ url_for('static', filename='AddOn_ChtHistry_DB_CpyBtn.js') }}"></script>
+
+<script>
+    // Quick starter buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.starter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const prompt = this.getAttribute('data-prompt');
+                if (window.xeerGPT && window.xeerGPT.userInput) {
+                    window.xeerGPT.userInput.value = prompt;
+                    window.xeerGPT.sendMessage();
+                }
+            });
+        });
+        
+        document.querySelectorAll('.suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const prompt = this.getAttribute('data-prompt') || this.textContent;
+                if (window.xeerGPT && window.xeerGPT.userInput) {
+                    window.xeerGPT.userInput.value = prompt;
+                    window.xeerGPT.sendMessage();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

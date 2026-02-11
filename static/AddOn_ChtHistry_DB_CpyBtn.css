@@ -1,0 +1,169 @@
+/* Code Block Styling */
+.code-block-wrapper {
+    position: relative;
+    margin: 12px 0;
+}
+
+.copy-code-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ececf1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+}
+
+.copy-code-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.copy-code-btn.copied {
+    background: #10a37f;
+    border-color: #10a37f;
+}
+
+.copy-code-btn i {
+    font-size: 11px;
+}
+
+/* Markdown Styling */
+.message-content pre {
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.message-content code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.9em;
+}
+
+.message-content pre code {
+    background: transparent;
+    padding: 0;
+    display: block;
+    line-height: 1.5;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #ececf1;
+}
+
+.message-content ul,
+.message-content ol {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.message-content li {
+    margin: 6px 0;
+}
+
+.message-content blockquote {
+    border-left: 3px solid #10a37f;
+    padding-left: 16px;
+    margin: 12px 0;
+    color: #b4b4b4;
+}
+
+.message-content a {
+    color: #10a37f;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+/* Delete Chat Button */
+.delete-chat-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.history-item:hover .delete-chat-btn {
+    display: block;
+}
+
+.delete-chat-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Typing Indicator */
+#typingIndicator {
+    position: fixed;
+    bottom: 180px; /* Adjust based on your input height */
+    left: 280px; /* Adjust based on sidebar width */
+    padding: 12px 20px;
+    background: rgba(52, 53, 65, 0.95);
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    color: #b4b4b4;
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #10a37f;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+.typing-text {
+    font-size: 14px;
+    font-weight: 500;
+}
