@@ -1,5 +1,6 @@
 """
 Usage Tracker - Tracks API usage per provider with rate limit reset times
+FIXED VERSION - Proper persistence and date handling
 Groq: 14,400 requests/day (resets midnight UTC)
 OpenRouter: 200 requests/day free tier (resets midnight UTC)
 """
@@ -7,8 +8,11 @@ OpenRouter: 200 requests/day free tier (resets midnight UTC)
 import json
 import os
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
-USAGE_FILE = "usage_data.json"
+# Use absolute path to prevent file location issues
+BASE_DIR = Path(__file__).resolve().parent
+USAGE_FILE = BASE_DIR / "usage_data.json"
 
 # Provider limits (adjust these to match your actual plan)
 PROVIDER_LIMITS = {
@@ -29,26 +33,44 @@ PROVIDER_LIMITS = {
 }
 
 def _load_data():
-    """Load usage data from file"""
-    if not os.path.exists(USAGE_FILE):
+    """Load usage data from file with proper error handling"""
+    if not USAGE_FILE.exists():
+        print(f"📂 Creating new usage file: {USAGE_FILE}")
         return {}
     try:
         with open(USAGE_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
+            data = json.load(f)
+            print(f"📊 Loaded usage data: {data}")
+            return data
+    except json.JSONDecodeError:
+        print(f"⚠️ Corrupted usage file, resetting")
+        return {}
+    except Exception as e:
+        print(f"⚠️ Error loading usage data: {e}")
         return {}
 
 def _save_data(data):
-    """Save usage data to file"""
+    """Save usage data to file with atomic write"""
     try:
-        with open(USAGE_FILE, "w") as f:
+        # Ensure directory exists
+        USAGE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Write to temp file first, then rename (atomic)
+        temp_file = USAGE_FILE.with_suffix('.tmp')
+        with open(temp_file, "w") as f:
             json.dump(data, f, indent=2)
+        
+        # Atomic rename
+        temp_file.replace(USAGE_FILE)
+        print(f"💾 Saved usage data: {data}")
     except Exception as e:
-        print(f"⚠️ Could not save usage data: {e}")
+        print(f"❌ Could not save usage data: {e}")
 
 def _get_today_key():
-    """Get today's date key in UTC"""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    """Get today's date key in UTC (YYYY-MM-DD format)"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    print(f"📅 Today's date key: {today}")
+    return today
 
 def _get_reset_time(provider_key):
     """Get the next reset datetime for a provider (midnight UTC)"""
@@ -87,26 +109,47 @@ def _format_countdown(seconds):
         return f"{secs}s"
 
 def record_usage(provider_key: str):
-    """Record one API call for the given provider"""
+    """
+    Record one API call for the given provider
+    FIXED: Properly handles date transitions and persistence
+    """
     data = _load_data()
     today = _get_today_key()
 
+    # Initialize provider if not exists
     if provider_key not in data:
-        data[provider_key] = {}
+        data[provider_key] = {
+            "date": today,
+            "count": 0
+        }
+        print(f"🆕 Initialized tracking for {provider_key}")
 
-    # Auto-reset if it's a new day
-    if "date" not in data[provider_key] or data[provider_key]["date"] != today:
+    # Check if we need to reset (new day)
+    stored_date = data[provider_key].get("date")
+    if stored_date != today:
+        print(f"🔄 New day detected for {provider_key}: {stored_date} → {today}")
         data[provider_key] = {
             "date": today,
             "count": 0
         }
 
-    data[provider_key]["count"] = data[provider_key].get("count", 0) + 1
+    # Increment count
+    old_count = data[provider_key].get("count", 0)
+    data[provider_key]["count"] = old_count + 1
+    
+    # CRITICAL: Save immediately to disk
     _save_data(data)
-    return data[provider_key]["count"]
+    
+    new_count = data[provider_key]["count"]
+    print(f"📈 {provider_key}: {old_count} → {new_count}")
+    
+    return new_count
 
 def get_usage_stats():
-    """Return full usage stats for all providers"""
+    """
+    Return full usage stats for all providers
+    FIXED: Properly handles stale data and resets
+    """
     data = _load_data()
     today = _get_today_key()
     stats = {}
@@ -114,9 +157,12 @@ def get_usage_stats():
     for provider_key, provider_info in PROVIDER_LIMITS.items():
         provider_data = data.get(provider_key, {})
 
-        # Reset if stale date
-        if provider_data.get("date") != today:
+        # Check if data is from today
+        stored_date = provider_data.get("date")
+        if stored_date != today:
+            # Stale data - reset to 0
             count = 0
+            print(f"🔄 Resetting stale data for {provider_key}: {stored_date} → {today}")
         else:
             count = provider_data.get("count", 0)
 
@@ -159,3 +205,18 @@ def reset_provider(provider_key: str):
     today = _get_today_key()
     data[provider_key] = {"date": today, "count": 0}
     _save_data(data)
+    print(f"🔄 Manually reset {provider_key}")
+
+def get_debug_info():
+    """Get debug information about usage tracking"""
+    data = _load_data()
+    today = _get_today_key()
+    
+    debug = {
+        "file_path": str(USAGE_FILE),
+        "file_exists": USAGE_FILE.exists(),
+        "current_utc_date": today,
+        "raw_data": data
+    }
+    
+    return debug

@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 from router import route_message  # Your existing router
 from llm import get_available_models  # For model list
-from datetime import datetime
+from datetime import datetime, timezone
 from models import db, Conversation, Message
 import traceback
 from dotenv import load_dotenv
 import os
 import json
+import time  # ADDED for typewriter delay
 from usage_tracker import record_usage, get_usage_stats
 
 # Load environment variables from .env file
@@ -110,7 +111,7 @@ def clear_all():
     db.session.commit()
     return jsonify({"success": True})
 
-# Chat endpoint - WITH STREAMING SUPPORT
+# Chat endpoint - WITH PROPER STREAMING TYPEWRITER EFFECT
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
@@ -150,31 +151,38 @@ def chat():
         db.session.add(user_message)
         db.session.commit()
 
-        # Stream the response
+        # Stream the response with typewriter effect
         def generate():
             try:
                 # Get full AI response
                 ai_response = route_message(message, model=model)
                 
-                # Track usage per provider
+                # Track usage per provider (FIXED - only track once per message)
                 try:
                     from llm import AVAILABLE_MODELS
                     model_info = AVAILABLE_MODELS.get(model, {})
                     provider = model_info.get("provider", "unknown")
                     if provider in ("groq", "openrouter"):
                         record_usage(provider)
-                except Exception:
+                        print(f"📊 Tracked usage for {provider}")
+                except Exception as e:
+                    print(f"⚠️ Usage tracking error: {e}")
                     pass  # Never let tracking break the chat
                 
                 # Send conversation_id first
                 yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
                 
-                # Stream response word by word
+                # FIXED: Stream with proper delays for typewriter effect
+                # Split by words for natural reading rhythm
                 words = ai_response.split(' ')
                 for i, word in enumerate(words):
                     # Add space back except for last word
                     chunk = word + (' ' if i < len(words) - 1 else '')
                     yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
+                    
+                    # CRITICAL: Add small delay for typewriter effect
+                    # Adjust this value to control speed (0.03 = 30ms per word)
+                    time.sleep(0.03)
                 
                 # Save AI message to database
                 ai_message = Message(
@@ -185,7 +193,7 @@ def chat():
                 db.session.add(ai_message)
                 
                 # Update conversation timestamp
-                conversation.updated_at = datetime.utcnow()
+                conversation.updated_at = datetime.now(timezone.utc)
                 db.session.commit()
                 
                 print(f"💾 Saved messages to conversation {conversation_id}")
