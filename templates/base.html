@@ -6,11 +6,11 @@
     <title>{% block title %}XeerGPT{% endblock %}</title>
     
     <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('css', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('css', filename='UniversalSearchIndicator.css') }}">
-    <link rel="stylesheet" href="{{ url_for('css', filename='AddOn_ChtHistry_DB_CpyBtn.css') }}">
-    <link rel="stylesheet" href="{{ url_for('css', filename='ChatUI.css') }}">
-    <link rel="stylesheet" href="{{ url_for('css', filename='usage_bar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='UniversalSearchIndicator.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='AddOn_ChtHistry_DB_CpyBtn.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ChatUI.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='usage_bar.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     
@@ -94,7 +94,7 @@
 
     <!-- Scripts -->
     {% block extra_scripts %}{% endblock %}
-    <script src="{{ url_for('js', filename='usage_bar.js') }}"></script>
+    <script src="{{ url_for('static', filename='usage_bar.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const savedTheme = localStorage.getItem('xeergpt_theme') || 'dark';
