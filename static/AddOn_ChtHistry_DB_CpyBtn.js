@@ -446,12 +446,56 @@ class AddOnChtHistryDBCpyBtn {
                             this.highlightCode(contentDiv);
                         }, 0);
                         
+                        // ADD MESSAGE COPY BUTTON AFTER STREAMING COMPLETES
+                        const copyBtn = this.createMessageCopyButton(fullContent);
+                        messageDiv.appendChild(copyBtn);
+                        
                     } else if (data.type === 'error') {
                         contentDiv.innerHTML = this.renderMarkdown(data.message);
+                        
+                        // Add copy button even for errors
+                        const copyBtn = this.createMessageCopyButton(data.message);
+                        messageDiv.appendChild(copyBtn);
                     }
                 }
             }
         }
+    }
+
+    // NEW METHOD: Create message copy button
+    createMessageCopyButton(content) {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'message-copy-btn';
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+        copyBtn.title = 'Copy message';
+        
+        copyBtn.addEventListener('click', async () => {
+            try {
+                // Strip HTML tags and get plain text
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                const plainText = tempDiv.textContent || tempDiv.innerText || content;
+                
+                await navigator.clipboard.writeText(plainText);
+                
+                // Visual feedback
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+                
+                this.showNotification('Message copied to clipboard', 'success');
+            } catch (error) {
+                console.error('Copy failed:', error);
+                this.showNotification('Failed to copy message', 'error');
+            }
+        });
+        
+        return copyBtn;
     }
 
     // Concert search functionality
@@ -655,6 +699,11 @@ class AddOnChtHistryDBCpyBtn {
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(contentDiv);
+        
+        // Add message copy button
+        const copyBtn = this.createMessageCopyButton(content);
+        messageDiv.appendChild(copyBtn);
+        
         this.messagesDiv.appendChild(messageDiv);
 
         if (shouldScroll) this.scrollToBottom();
@@ -810,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         @keyframes blink {
-            0%, 50% { opacity: 1; }
+            0%, 50% { opacity: 0; }
             51%, 100% { opacity: 0; }
         }
     `;

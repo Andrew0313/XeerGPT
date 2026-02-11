@@ -167,3 +167,78 @@
     font-size: 14px;
     font-weight: 500;
 }
+
+/* ================ MESSAGE COPY BUTTON ================ */
+.message {
+    position: relative;
+}
+
+.message-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+}
+
+.message:hover .message-copy-btn {
+    display: flex;
+}
+
+.message-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+}
+
+.message-copy-btn.copied {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.message-copy-btn i {
+    font-size: 11px;
+}
+
+/* Adjust user message for copy button positioning */
+.user-message {
+    position: relative;
+}
+
+.user-message .message-copy-btn {
+    right: 48px; /* Space for avatar on right */
+}
+
+/* Adjust assistant message for copy button positioning */
+.assistant-message,
+.bot-message {
+    position: relative;
+}
+
+.assistant-message .message-copy-btn,
+.bot-message .message-copy-btn {
+    right: 8px;
+    left: auto;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .message-copy-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .message-copy-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
