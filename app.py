@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 from router import route_message  # Your existing router
 from llm import get_available_models  # For model list
 from datetime import datetime
@@ -6,6 +6,7 @@ from models import db, Conversation, Message
 import traceback
 from dotenv import load_dotenv
 import os
+import json
 from usage_tracker import record_usage, get_usage_stats
 
 # Load environment variables from .env file
@@ -109,7 +110,7 @@ def clear_all():
     db.session.commit()
     return jsonify({"success": True})
 
-# Chat endpoint - with model support
+# Chat endpoint - WITH STREAMING SUPPORT
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
@@ -149,62 +150,69 @@ def chat():
         db.session.add(user_message)
         db.session.commit()
 
-        # Get AI response using selected model (via your existing router)
-        try:
-            ai_response = route_message(message, model=model)
-
-            # ── Track usage per provider ──────────────────────────────
+        # Stream the response
+        def generate():
             try:
-                from llm import AVAILABLE_MODELS
-                model_info = AVAILABLE_MODELS.get(model, {})
-                provider = model_info.get("provider", "unknown")
-                if provider in ("groq", "openrouter"):
-                    record_usage(provider)
-            except Exception:
-                pass  # Never let tracking break the chat
-            # ─────────────────────────────────────────────────────────
-
-        except Exception as e:
-            error_str = str(e)
-            print(f"AI Error: {e}")
-            traceback.print_exc()
-            db.session.rollback()
-
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                return jsonify({
-                    "success": False,
-                    "response": f"⚠️ **{model}** has hit its rate limit. Please wait a moment or switch to a different model.",
-                    "conversation_id": conversation_id
-                }), 200
-
-            return jsonify({
-                "success": False,
-                "response": f"❌ {error_str}",
-                "conversation_id": conversation_id
-            }), 200
-
-        # Save AI message
-        ai_message = Message(
-            conversation_id=conversation_id,
-            role="assistant",
-            content=ai_response
+                # Get full AI response
+                ai_response = route_message(message, model=model)
+                
+                # Track usage per provider
+                try:
+                    from llm import AVAILABLE_MODELS
+                    model_info = AVAILABLE_MODELS.get(model, {})
+                    provider = model_info.get("provider", "unknown")
+                    if provider in ("groq", "openrouter"):
+                        record_usage(provider)
+                except Exception:
+                    pass  # Never let tracking break the chat
+                
+                # Send conversation_id first
+                yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
+                
+                # Stream response word by word
+                words = ai_response.split(' ')
+                for i, word in enumerate(words):
+                    # Add space back except for last word
+                    chunk = word + (' ' if i < len(words) - 1 else '')
+                    yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
+                
+                # Save AI message to database
+                ai_message = Message(
+                    conversation_id=conversation_id,
+                    role="assistant",
+                    content=ai_response
+                )
+                db.session.add(ai_message)
+                
+                # Update conversation timestamp
+                conversation.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                print(f"💾 Saved messages to conversation {conversation_id}")
+                
+                # Send done signal
+                yield f"data: {json.dumps({'type': 'done', 'success': True})}\n\n"
+                
+            except Exception as e:
+                error_str = str(e)
+                print(f"AI Error: {e}")
+                traceback.print_exc()
+                db.session.rollback()
+                
+                error_message = f"❌ {error_str}"
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    error_message = f"⚠️ **{model}** has hit its rate limit. Please wait a moment or switch to a different model."
+                
+                yield f"data: {json.dumps({'type': 'error', 'message': error_message})}\n\n"
+        
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no'
+            }
         )
-        db.session.add(ai_message)
-
-        # Update conversation timestamp
-        conversation.updated_at = datetime.utcnow()
-
-        db.session.commit()
-
-        print(f"💾 Saved messages to conversation {conversation_id}")
-
-        return jsonify({
-            "success": True,
-            "response": ai_response,
-            "conversation_id": conversation_id,
-            "model": model,
-            "timestamp": datetime.utcnow().isoformat()
-        })
 
     except Exception as e:
         print(f"ERROR in /api/chat: {str(e)}")
@@ -214,7 +222,7 @@ def chat():
         return jsonify({
             "success": False,
             "response": "I'm having trouble connecting right now. Please check your connection and try again."
-        }), 200
+        }), 500
 
 # Test endpoint to check API keys loaded
 @app.route("/api/test-keys")

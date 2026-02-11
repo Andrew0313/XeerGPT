@@ -1267,6 +1267,20 @@ code {
     }
 }
 
+/* Typing cursor animation */
+.typing-cursor {
+    display: inline-block;
+    color: var(--accent-primary);
+    animation: blink 1s infinite;
+    margin-left: 2px;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
 /* ================ UTILITY CLASSES ================ */
 .text-center {
     text-align: center;

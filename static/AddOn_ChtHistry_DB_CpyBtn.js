@@ -369,30 +369,7 @@
             this.showTypingIndicator();
 
             try {
-                const response = await this.fetchBotResponse(message);
-                this.hideTypingIndicator();
-                
-                if (response.success) {
-                    // Check if it's a concert search response
-                    if (response.response.startsWith('CONCERT_SEARCH:')) {
-                        const [_, params] = response.response.split(':');
-                        const [date, keywords] = params.split('|');
-                        await this.fetchConcerts(date === 'any' ? null : date, keywords === 'all' ? null : keywords);
-                    } else {
-                        this.displayMessage(response.response, 'assistant');
-                        const wasNewConversation = this.currentConversationId === null;
-                        
-                        if (response.conversation_id) {
-                            this.currentConversationId = response.conversation_id;
-                        }
-                        
-                        if (wasNewConversation) {
-                            await this.loadConversations();
-                        }
-                    }
-                } else {
-                    this.displayMessage(response.response || 'Sorry, something went wrong.', 'assistant');
-                }
+                await this.fetchBotResponseStreaming(message);
             } catch (error) {
                 this.hideTypingIndicator();
                 console.error('❌ Chat error:', error);
@@ -400,6 +377,81 @@
             }
 
             this.scrollToBottom();
+        }
+
+        async fetchBotResponseStreaming(message) {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    conversation_id: this.currentConversationId,
+                    model: this.selectedModel
+                }),
+            });
+
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            this.hideTypingIndicator();
+            
+            // Create streaming message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant-message';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = '<div class="logo-icon-small">X</div>';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = '<span class="typing-cursor">▋</span>';
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            this.messagesDiv.appendChild(messageDiv);
+            this.scrollToBottom();
+
+            // Read stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullContent = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.slice(6));
+                        
+                        if (data.type === 'conversation_id') {
+                            const wasNew = this.currentConversationId === null;
+                            this.currentConversationId = data.conversation_id;
+                            if (wasNew) await this.loadConversations();
+                            
+                        } else if (data.type === 'content') {
+                            fullContent += data.content;
+                            contentDiv.innerHTML = this.renderMarkdown(fullContent) + '<span class="typing-cursor">▋</span>';
+                            this.scrollToBottom();
+                            
+                        } else if (data.type === 'done') {
+                            contentDiv.innerHTML = this.renderMarkdown(fullContent);
+                            setTimeout(() => {
+                                this.addCopyButtons(contentDiv);
+                                this.highlightCode(contentDiv);
+                            }, 0);
+                            
+                        } else if (data.type === 'error') {
+                            contentDiv.innerHTML = this.renderMarkdown(data.message);
+                        }
+                    }
+                }
+            }
         }
 
         // Concert search functionality
