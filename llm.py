@@ -109,7 +109,7 @@ AVAILABLE_MODELS = {
         "provider": "openrouter",
         "model_id": "deepseek/deepseek-chat",
         "name": "DeepSeek Chat (Free)",
-        "description": "Almost unlimited, Conversational",
+        "description": "Almost unlimited Conversation",
         "icon": "🌊"
     },
     "deepseek-r1": {
