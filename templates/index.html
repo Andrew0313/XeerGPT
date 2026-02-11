@@ -23,8 +23,8 @@
             <div class="nav-links">
                 <a href="#features" class="nav-link">Features</a>
                 <a href="#demo" class="nav-link">Try Demo</a>
-                <a href="#about" class="nav-link">About</a>
-                <a href="/chat" class="nav-link primary-btn">Start Chatting <i class="fas fa-arrow-right"></i></a>
+                <a href="/chat" class="nav-link">About</a>
+                <a href="/chat?skip_welcome=true" class="nav-link primary-btn">Start Chatting <i class="fas fa-arrow-right"></i></a>
             </div>
             <button class="theme-toggle" id="themeToggle">
                 <i class="fas fa-moon"></i>
@@ -46,7 +46,7 @@
                     and provides meaningful conversations. Powered by advanced algorithms and natural language processing.
                 </p>
                 <div class="hero-actions">
-                    <a href="/chat" class="primary-btn large-btn">
+                    <a href="/chat?skip_welcome=true" class="primary-btn large-btn">
                         <i class="fas fa-comment-dots"></i> Start Free Chat
                     </a>
                     <a href="#features" class="secondary-btn large-btn">
@@ -165,7 +165,7 @@
                         <li><i class="fas fa-check-circle"></i> Privacy focused</li>
                         <li><i class="fas fa-check-circle"></i> Multi-topic conversations</li>
                     </ul>
-                    <a href="/chat" class="primary-btn large-btn">
+                    <a href="/chat?skip_welcome=true" class="primary-btn large-btn">
                         <i class="fas fa-rocket"></i> Launch Chat Interface
                     </a>
                 </div>
@@ -210,14 +210,14 @@
             <div class="footer-links">
                 <div class="footer-column">
                     <h4>Product</h4>
-                    <a href="/chat">Chat Interface</a>
+                    <a href="/chat?skip_welcome=true">Chat Interface</a>
                     <a href="#features">Features</a>
                     <a href="#demo">Demo</a>
                     <a href="#">API Documentation</a>
                 </div>
                 <div class="footer-column">
                     <h4>Company</h4>
-                    <a href="#about">About</a>
+                    <a href="/chat">About</a>
                     <a href="#">Blog</a>
                     <a href="#">Careers</a>
                     <a href="#">Contact</a>
@@ -242,7 +242,7 @@
         document.querySelectorAll('.quick-question').forEach(button => {
             button.addEventListener('click', function() {
                 const question = this.getAttribute('data-question');
-                window.location.href = `/chat?q=${encodeURIComponent(question)}`;
+                window.location.href = `/chat?skip_welcome=true&q=${encodeURIComponent(question)}`;
             });
         });
 

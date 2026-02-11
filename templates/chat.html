@@ -370,8 +370,29 @@
 <script src="{{ url_for('static', filename='AddOn_ChtHistry_DB_CpyBtn.js') }}"></script>
 
 <script>
-    // Quick starter buttons
     document.addEventListener('DOMContentLoaded', () => {
+        // Check if we should skip the welcome screen
+        const urlParams = new URLSearchParams(window.location.search);
+        const skipWelcome = urlParams.get('skip_welcome');
+        
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const messagesContainer = document.getElementById('messagesContainer');
+        
+        if (skipWelcome === 'true') {
+            // Skip welcome, go straight to chat
+            welcomeScreen.style.display = 'none';
+            messagesContainer.style.display = 'flex';
+            
+            // Focus on input after a brief delay
+            setTimeout(() => {
+                const userInput = document.getElementById('userInput');
+                if (userInput) {
+                    userInput.focus();
+                }
+            }, 100);
+        }
+        
+        // Quick starter buttons (for welcome screen)
         document.querySelectorAll('.starter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const prompt = this.getAttribute('data-prompt');
@@ -382,6 +403,7 @@
             });
         });
         
+        // Suggestion buttons
         document.querySelectorAll('.suggestion-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const prompt = this.getAttribute('data-prompt') || this.textContent;
