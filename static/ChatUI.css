@@ -632,6 +632,7 @@ code {
     background: var(--bg-primary);
 }
 
+/* Dark Mode Scrollbar Styling */
 .messages::-webkit-scrollbar {
     width: 8px;
 }
@@ -642,11 +643,30 @@ code {
 
 .messages::-webkit-scrollbar-thumb {
     background: var(--border-light);
-    border-radius: var(--radius-sm);
+    border-radius: 4px;
 }
 
 .messages::-webkit-scrollbar-thumb:hover {
     background: var(--border-dark);
+}
+
+/* Firefox Scrollbar */
+.messages {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-primary);
+}
+
+/* Light Theme Scrollbar */
+[data-theme="light"] .messages::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+}
+
+[data-theme="light"] .messages::-webkit-scrollbar-thumb:hover {
+    background: var(--border-light);
+}
+
+[data-theme="light"] .messages {
+    scrollbar-color: var(--border-dark) var(--bg-primary);
 }
 
 /* ================ MESSAGE STYLES - CENTERED LAYOUT ================ */

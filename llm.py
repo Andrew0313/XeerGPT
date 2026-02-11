@@ -78,7 +78,7 @@ AVAILABLE_MODELS = {
         "model_id": "llama-3.1-70b-versatile",
         "name": "Llama 3.1 70B",
         "description": "Best quality-Coding, General tasks",
-        "icon": "⚡"
+        "icon": "🦙"
     },
     "llama-3.1-8b": {
         "provider": "groq",
@@ -92,14 +92,14 @@ AVAILABLE_MODELS = {
         "model_id": "llama-3.2-90b-text-preview",
         "name": "Llama 3.2 90B",
         "description": "Most powerful, Complex-coding",
-        "icon": "⚡"
+        "icon": "🚀"
     },
     "mixtral-8x7b": {
         "provider": "groq",
         "model_id": "mixtral-8x7b-32768",
         "name": "Mixtral 8x7B",
         "description": "Great Problem solver",
-        "icon": "⚡"
+        "icon": "🎯"
     },
     
     # OpenRouter Free Models - VERIFIED WORKING (no :free suffix needed!)
@@ -108,30 +108,30 @@ AVAILABLE_MODELS = {
     "deepseek-chat": {
         "provider": "openrouter",
         "model_id": "deepseek/deepseek-chat",
-        "name": "DeepSeek Chat (Free)",
+        "name": "DeepSeek Chat",
         "description": "Almost unlimited Conversation",
         "icon": "🌊"
     },
     "deepseek-r1": {
         "provider": "openrouter",
         "model_id": "deepseek/deepseek-r1",
-        "name": "DeepSeek R1 (Free)",
+        "name": "DeepSeek R1",
         "description": "Advanced Math-Coding",
-        "icon": "🌊"
+        "icon": "🧠"
     },
     
     # Google Gemini Models (via OpenRouter - FREE!)
     "gemini-flash-1.5": {
         "provider": "openrouter",
         "model_id": "google/gemini-flash-1.5",
-        "name": "Gemini Flash 1.5 (Free)",
+        "name": "Gemini Flash 1.5",
         "description": "Fast & efficient",
-        "icon": "🔮"
+        "icon": "💎"
     },
     "gemini-pro-1.5": {
         "provider": "openrouter",
         "model_id": "google/gemini-pro-1.5",
-        "name": "Gemini Pro 1.5 (Free)",
+        "name": "Gemini Pro 1.5",
         "description": "Most powerful Gemini",
         "icon": "🔮"
     },
@@ -140,60 +140,60 @@ AVAILABLE_MODELS = {
     "llama-3.1-405b-free": {
         "provider": "openrouter",
         "model_id": "meta-llama/llama-3.1-405b-instruct",
-        "name": "Llama 3.1 405B (Free)",
+        "name": "Llama 3.1 405B",
         "description": "Largest Llama model!",
-        "icon": "🔀"
+        "icon": "🦙"
     },
     "llama-3.1-70b-free": {
         "provider": "openrouter",
         "model_id": "meta-llama/llama-3.1-70b-instruct",
-        "name": "Llama 3.1 70B (Free)",
+        "name": "Llama 3.1 70B",
         "description": "Ultra Fast",
-        "icon": "🔀"
+        "icon": "🦙"
     },
     "llama-3.2-3b-free": {
         "provider": "openrouter",
         "model_id": "meta-llama/llama-3.2-3b-instruct",
-        "name": "Llama 3.2 3B (Free)",
+        "name": "Llama 3.2 3B",
         "description": "Super fast, Simple tasks",
-        "icon": "🔀"
+        "icon": "⚡"
     },
     
     # Other Great Free Models
     "qwen-2.5-72b-free": {
         "provider": "openrouter",
         "model_id": "qwen/qwen-2.5-72b-instruct",
-        "name": "Qwen 2.5 72B (Free)",
+        "name": "Qwen 2.5 72B",
         "description": "Excellent Math, Chinese",
-        "icon": "🔀"
+        "icon": "🐉"
     },
     "gemma-2-27b-free": {
         "provider": "openrouter",
         "model_id": "google/gemma-2-27b-it",
-        "name": "Gemma 2 27B (Free)",
+        "name": "Gemma 2 27B",
         "description": "Google Open-Source model",
-        "icon": "🔀"
+        "icon": "💠"
     },
     "phi-3-medium-free": {
         "provider": "openrouter",
         "model_id": "microsoft/phi-3-medium-128k-instruct",
-        "name": "Phi-3 Medium (Free)",
+        "name": "Phi-3 Medium",
         "description": "Microsoft's medium model",
-        "icon": "🔀"
+        "icon": "🔷"
     },
     "mythomist-7b-free": {
         "provider": "openrouter",
         "model_id": "gryphe/mythomist-7b",
-        "name": "Mythomist 7B (Free)",
+        "name": "Mythomist 7B",
         "description": "Creative writing",
-        "icon": "🔀"
+        "icon": "✨"
     },
     "nous-capybara-free": {
         "provider": "openrouter",
         "model_id": "nousresearch/nous-capybara-7b",
-        "name": "Nous Capybara (Free)",
+        "name": "Nous Capybara",
         "description": "Conversational, roleplay",
-        "icon": "🔀"
+        "icon": "🦫"
     }
 }
 
@@ -284,11 +284,11 @@ def get_available_models():
         if provider not in providers:
             providers[provider] = {
                 "display_name": provider_display.get(provider, provider),
-                "icon": model_info["icon"],
                 "models": {}
             }
         providers[provider]["models"][model_key] = {
             "name": model_info["name"],
-            "description": model_info["description"]
+            "description": model_info["description"],
+            "icon": model_info["icon"]
         }
     return providers
