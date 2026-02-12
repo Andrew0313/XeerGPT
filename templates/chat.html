@@ -3,7 +3,93 @@
 {% block title %}Chat with XeerGPT{% endblock %}
 
 {% block extra_head %}
+<!-- Syntax Highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
 <style>
+
+/* Dark scrollbar for selected files list */
+.selected-files-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.selected-files-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.selected-files-list::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+.selected-files-list::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
+}
+
+/* Firefox */
+.selected-files-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-secondary);
+}
+
+/* Also fix the modal itself if it ever scrolls */
+.file-upload-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-upload-modal::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.file-upload-modal::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+.file-upload-modal::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
+}
+
+.file-upload-modal {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-secondary);
+}
+
+    #fileUploadBtn {
+        color: var(--text-muted);
+        flex-shrink: 0;
+        font-size: 1rem;
+        padding: 4px 8px;
+        transition: color 0.2s ease;
+    }
+
+    #fileUploadBtn:hover {
+        color: var(--accent-primary);
+    }
+
+    /* Fix paste preview position - anchored to input-container */
+    .paste-preview-container {
+        position: absolute;
+        bottom: 100%;
+        left: 20px;
+        right: 20px;
+        margin-bottom: 8px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 100;
+    }
+
+    .paste-preview-container.active {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
     /* Chat container */
     .chat-container {
         height: 100%;
@@ -32,7 +118,7 @@
         right: 0;
         background: var(--bg-primary);
         border-top: 1px solid var(--border-light);
-        padding: 20px;
+        padding: 12px 20px 10px;
         z-index: 100;
         transition: left 0.3s ease;
     }
@@ -48,6 +134,21 @@
         display: flex;
         gap: 12px;
         align-items: flex-end;
+    }
+
+    /* Disclaimer - tight, no extra space */
+    .input-footer {
+        max-width: 768px;
+        margin: 6px auto 0;
+    }
+
+    .disclaimer {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        line-height: 1.4;
     }
 
     /* Model selector beside send button */
@@ -77,9 +178,7 @@
         border-color: var(--accent-primary);
     }
 
-    .model-selector-btn .model-icon {
-        font-size: 1.1rem;
-    }
+    .model-selector-btn .model-icon { font-size: 1.1rem; }
 
     .model-selector-btn .model-name-short {
         flex: 1;
@@ -94,11 +193,8 @@
         transition: transform 0.2s ease;
     }
 
-    .model-selector-btn.open .chevron {
-        transform: rotate(180deg);
-    }
+    .model-selector-btn.open .chevron { transform: rotate(180deg); }
 
-    /* Model dropdown panel */
     .model-dropdown {
         position: absolute;
         bottom: calc(100% + 8px);
@@ -137,13 +233,8 @@
         gap: 6px;
     }
 
-    .model-group {
-        margin-bottom: 8px;
-    }
-
-    .model-group:last-child {
-        margin-bottom: 0;
-    }
+    .model-group { margin-bottom: 8px; }
+    .model-group:last-child { margin-bottom: 0; }
 
     .model-item {
         display: flex;
@@ -155,21 +246,10 @@
         transition: background 0.15s ease;
     }
 
-    .model-item:hover {
-        background: var(--bg-tertiary);
-    }
-
-    .model-item.selected {
-        background: rgba(16, 163, 127, 0.12);
-    }
-
-    .model-item-icon {
-        font-size: 1.1rem;
-    }
-
-    .model-item-info {
-        flex: 1;
-    }
+    .model-item:hover { background: var(--bg-tertiary); }
+    .model-item.selected { background: rgba(16, 163, 127, 0.12); }
+    .model-item-icon { font-size: 1.1rem; }
+    .model-item-info { flex: 1; }
 
     .model-item-name {
         font-size: 0.875rem;
@@ -189,9 +269,7 @@
         opacity: 0;
     }
 
-    .model-item.selected .model-item-check {
-        opacity: 1;
-    }
+    .model-item.selected .model-item-check { opacity: 1; }
 
     .model-divider {
         height: 1px;
@@ -199,42 +277,342 @@
         margin: 8px 0;
     }
 
-    /* Model Dropdown Scrollbar - Dark Theme */
-    .model-dropdown::-webkit-scrollbar {
-        width: 6px;
+    .model-dropdown::-webkit-scrollbar { width: 6px; }
+    .model-dropdown::-webkit-scrollbar-track { background: var(--bg-secondary); }
+    .model-dropdown::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+    .model-dropdown::-webkit-scrollbar-thumb:hover { background: var(--border-dark); }
+    .model-dropdown { scrollbar-width: thin; scrollbar-color: var(--border-light) var(--bg-secondary); }
+
+    [data-theme="light"] .model-dropdown::-webkit-scrollbar-thumb { background: var(--border-dark); }
+    [data-theme="light"] .model-dropdown::-webkit-scrollbar-thumb:hover { background: #999; }
+    [data-theme="light"] .model-dropdown { scrollbar-color: var(--border-dark) var(--bg-secondary); }
+
+    /* ===== FILE UPLOAD MODAL ===== */
+    .file-upload-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        backdrop-filter: blur(4px);
     }
 
-    .model-dropdown::-webkit-scrollbar-track {
+    .file-upload-modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .file-upload-modal {
         background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 24px;
+        width: 480px;
+        max-width: 90vw;
+        max-height: 80vh;
+        overflow-y: auto;
+        transform: scale(0.95) translateY(10px);
+        transition: transform 0.2s ease;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
 
-    .model-dropdown::-webkit-scrollbar-thumb {
-        background: var(--border-light);
+    .file-upload-modal-overlay.active .file-upload-modal {
+        transform: scale(1) translateY(0);
+    }
+
+    .file-upload-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .file-upload-modal-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .file-upload-modal-title i {
+        color: var(--accent-primary);
+    }
+
+    .file-upload-modal-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload-modal-close:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+
+    /* Drop zone */
+    .file-drop-zone {
+        border: 2px dashed var(--border-light);
+        border-radius: 12px;
+        padding: 32px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 16px;
+        background: var(--bg-primary);
+    }
+
+    .file-drop-zone:hover,
+    .file-drop-zone.dragover {
+        border-color: var(--accent-primary);
+        background: rgba(16, 163, 127, 0.05);
+    }
+
+    .file-drop-zone .drop-icon {
+        font-size: 2rem;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    .file-drop-zone .drop-title {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .file-drop-zone .drop-subtitle {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+
+    .file-drop-zone .drop-subtitle span {
+        color: var(--accent-primary);
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    /* File type pills */
+    .file-type-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+        justify-content: center;
+    }
+
+    .file-type-pill {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-light);
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Selected files list */
+    .selected-files-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .selected-file-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .selected-file-item:hover {
+        border-color: var(--accent-primary);
+    }
+
+    .selected-file-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(16, 163, 127, 0.1);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-primary);
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .selected-file-info {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .selected-file-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .selected-file-size {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    /* Image preview thumbnail */
+    .selected-file-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+
+    .selected-file-remove {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+
+    .selected-file-remove:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    /* Modal action buttons */
+    .file-upload-modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .file-upload-cancel-btn {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+        padding: 9px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload-cancel-btn:hover {
+        background: var(--bg-primary);
+    }
+
+    .file-upload-submit-btn {
+        background: var(--accent-primary);
+        border: none;
+        color: white;
+        padding: 9px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload-submit-btn:hover:not(:disabled) {
+        background: var(--accent-hover);
+    }
+
+    .file-upload-submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Attached files preview below input */
+    .attached-files-row {
+        display: none;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 768px;
+        margin: 0 auto 8px;
+    }
+
+    .attached-files-row.has-files {
+        display: flex;
+    }
+
+    .attached-file-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: 20px;
+        padding: 4px 10px 4px 8px;
+        font-size: 0.78rem;
+        color: var(--text-primary);
+        max-width: 160px;
+    }
+
+    .attached-file-chip img {
+        width: 20px;
+        height: 20px;
+        object-fit: cover;
         border-radius: 3px;
     }
 
-    .model-dropdown::-webkit-scrollbar-thumb:hover {
-        background: var(--border-dark);
+    .attached-file-chip i {
+        color: var(--accent-primary);
+        font-size: 0.8rem;
     }
 
-    /* Firefox */
-    .model-dropdown {
-        scrollbar-width: thin;
-        scrollbar-color: var(--border-light) var(--bg-secondary);
+    .attached-file-chip-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
     }
 
-    /* Light Theme */
-    [data-theme="light"] .model-dropdown::-webkit-scrollbar-thumb {
-        background: var(--border-dark);
+    .attached-file-chip-remove {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.75rem;
+        line-height: 1;
+        transition: color 0.2s ease;
     }
 
-    [data-theme="light"] .model-dropdown::-webkit-scrollbar-thumb:hover {
-        background: #999;
-    }
+    .attached-file-chip-remove:hover { color: #ef4444; }
 
-    [data-theme="light"] .model-dropdown {
-        scrollbar-color: var(--border-dark) var(--bg-secondary);
-    }
+    /* Hidden file input */
+    #fileInput { display: none; }
 </style>
 {% endblock %}
 
@@ -251,9 +629,7 @@
             
             <div class="quick-starters">
                 <div class="quick-starter-card">
-                    <div class="card-icon">
-                        <i class="fas fa-code"></i>
-                    </div>
+                    <div class="card-icon"><i class="fas fa-code"></i></div>
                     <h3>Programming Help</h3>
                     <p>Get code examples and debugging assistance</p>
                     <button class="starter-btn" data-prompt="Write a Python function to calculate factorial">
@@ -261,11 +637,8 @@
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
-                
                 <div class="quick-starter-card">
-                    <div class="card-icon">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
+                    <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
                     <h3>Learn AI Concepts</h3>
                     <p>Understand complex topics with simple explanations</p>
                     <button class="starter-btn" data-prompt="Explain neural networks in simple terms">
@@ -273,11 +646,8 @@
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
-                
                 <div class="quick-starter-card">
-                    <div class="card-icon">
-                        <i class="fas fa-pen-fancy"></i>
-                    </div>
+                    <div class="card-icon"><i class="fas fa-pen-fancy"></i></div>
                     <h3>Creative Writing</h3>
                     <p>Generate stories, content, and creative ideas</p>
                     <button class="starter-btn" data-prompt="Write a short story about a robot learning emotions">
@@ -303,11 +673,46 @@
     <!-- Chat Messages Container -->
     <div class="messages-container" id="messagesContainer" style="display: none;">
         <div class="messages" id="messages"></div>
-        
-        <!-- Bottom Input Area with Model Selector -->
+
+        <!-- Bottom Input Area -->
         <div class="input-container">
+
+            <!-- PASTE PREVIEW CARD - anchored above input -->
+            <div class="paste-preview-container" id="pastePreviewContainer">
+                <div class="paste-preview-card">
+                    <div class="paste-preview-header">
+                        <div class="paste-preview-title">
+                            <i class="fas fa-clipboard paste-preview-icon"></i>
+                            <span id="pastePreviewTitle">Pasted Content</span>
+                            <span class="paste-preview-badge" id="pastePreviewBadge">
+                                <i class="fas fa-code"></i>
+                                <span id="pastePreviewLineCount">0 lines</span>
+                            </span>
+                            <span class="paste-preview-language" id="pastePreviewLanguage" style="display: none;">CODE</span>
+                        </div>
+                        <div class="paste-preview-actions">
+                            <button class="paste-preview-action-btn expand" id="pastePreviewExpand">
+                                <i class="fas fa-expand-alt"></i>
+                                <span>Expand</span>
+                            </button>
+                            <button class="paste-preview-close" id="pastePreviewClose" title="Remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="paste-preview-content" id="pastePreviewContent"></div>
+                </div>
+            </div>
+
+            <!-- Attached files chips row -->
+            <div class="attached-files-row" id="attachedFilesRow"></div>
+
             <div class="input-wrapper">
                 <div class="input-box">
+                    <!-- Paperclip upload button -->
+                    <button class="input-action-btn" id="fileUploadBtn" title="Upload file or image">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
                     <textarea 
                         id="userInput" 
                         placeholder="Message XeerGPT..."
@@ -322,17 +727,14 @@
                     </div>
                 </div>
 
-                <!-- MODEL SELECTOR DROPDOWN -->
+                <!-- MODEL SELECTOR -->
                 <div class="model-selector-dropdown">
                     <button class="model-selector-btn" id="modelSelectorBtn">
                         <span class="model-icon" id="selectedModelIcon">🔮</span>
                         <span class="model-name-short" id="selectedModelName">Gemini Flash</span>
                         <i class="fas fa-chevron-down chevron"></i>
                     </button>
-                    
-                    <div class="model-dropdown" id="modelDropdown">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
+                    <div class="model-dropdown" id="modelDropdown"></div>
                 </div>
 
                 <button class="send-btn" id="sendBtn" title="Send message">
@@ -341,14 +743,7 @@
             </div>
             
             <div class="input-footer">
-                <p class="disclaimer">
-                    XeerGPT can make mistakes. Consider checking important information.
-                </p>
-                <div class="suggestions" id="suggestions">
-                    <button class="suggestion-btn" data-prompt="Explain Python functions">Python Functions</button>
-                    <button class="suggestion-btn" data-prompt="What is machine learning?">Machine Learning</button>
-                    <button class="suggestion-btn" data-prompt="Write a JavaScript function">JavaScript</button>
-                </div>
+                <p class="disclaimer">XeerGPT can make mistakes. Consider checking important information.</p>
             </div>
         </div>
     </div>
@@ -356,63 +751,288 @@
 
 <!-- Typing Indicator -->
 <div class="typing-indicator" id="typingIndicator" style="display: none;">
-    <div class="typing-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+    <div class="typing-dots"><span></span><span></span><span></span></div>
     <span class="typing-text">XeerGPT is thinking...</span>
 </div>
+
+<!-- ===== FILE UPLOAD MODAL ===== -->
+<div class="file-upload-modal-overlay" id="fileUploadModalOverlay">
+    <div class="file-upload-modal">
+        <div class="file-upload-modal-header">
+            <div class="file-upload-modal-title">
+                <i class="fas fa-paperclip"></i>
+                Attach Files
+            </div>
+            <button class="file-upload-modal-close" id="fileUploadModalClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Drop Zone -->
+        <div class="file-drop-zone" id="fileDropZone">
+            <div class="drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="drop-title">Drop files here</div>
+            <div class="drop-subtitle">or <span id="browseFilesBtn">browse your computer</span></div>
+        </div>
+
+        <!-- Supported types -->
+        <div class="file-type-pills">
+            <span class="file-type-pill"><i class="fas fa-image"></i> Images</span>
+            <span class="file-type-pill"><i class="fas fa-file-pdf"></i> PDF</span>
+            <span class="file-type-pill"><i class="fas fa-file-code"></i> Code</span>
+            <span class="file-type-pill"><i class="fas fa-file-alt"></i> Text</span>
+            <span class="file-type-pill"><i class="fas fa-file-csv"></i> CSV</span>
+            <span class="file-type-pill"><i class="fas fa-file-archive"></i> JSON</span>
+        </div>
+
+        <!-- Selected files -->
+        <div class="selected-files-list" id="selectedFilesList"></div>
+
+        <!-- Actions -->
+        <div class="file-upload-modal-actions">
+            <button class="file-upload-cancel-btn" id="fileUploadCancelBtn">Cancel</button>
+            <button class="file-upload-submit-btn" id="fileUploadSubmitBtn" disabled>
+                <i class="fas fa-paperclip"></i>
+                Attach
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.py,.js,.html,.css,.json,.md,.csv,.ts,.jsx,.tsx,.xml,.yaml,.yml">
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- Load AddOn script -->
 <script src="{{ url_for('static', filename='AddOn_ChtHistry_DB_CpyBtn.js') }}"></script>
+<script src="{{ url_for('static', filename='paste-handler.js') }}"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Check if we should skip the welcome screen
-        const urlParams = new URLSearchParams(window.location.search);
-        const skipWelcome = urlParams.get('skip_welcome');
-        
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const messagesContainer = document.getElementById('messagesContainer');
-        
-        if (skipWelcome === 'true') {
-            // Skip welcome, go straight to chat
-            welcomeScreen.style.display = 'none';
-            messagesContainer.style.display = 'flex';
-            
-            // Focus on input after a brief delay
-            setTimeout(() => {
-                const userInput = document.getElementById('userInput');
-                if (userInput) {
-                    userInput.focus();
-                }
-            }, 100);
-        }
-        
-        // Quick starter buttons (for welcome screen)
-        document.querySelectorAll('.starter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const prompt = this.getAttribute('data-prompt');
-                if (window.xeerGPT && window.xeerGPT.userInput) {
-                    window.xeerGPT.userInput.value = prompt;
-                    window.xeerGPT.sendMessage();
-                }
-            });
+document.addEventListener('DOMContentLoaded', () => {
+    // ===== FILE UPLOAD MANAGER =====
+    const fileUploadBtn = document.getElementById('fileUploadBtn');
+    const modalOverlay = document.getElementById('fileUploadModalOverlay');
+    const modalClose = document.getElementById('fileUploadModalClose');
+    const cancelBtn = document.getElementById('fileUploadCancelBtn');
+    const submitBtn = document.getElementById('fileUploadSubmitBtn');
+    const dropZone = document.getElementById('fileDropZone');
+    const browseBtn = document.getElementById('browseFilesBtn');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFilesList = document.getElementById('selectedFilesList');
+    const attachedFilesRow = document.getElementById('attachedFilesRow');
+
+    let pendingFiles = [];   // Files in modal not yet attached
+    let attachedFiles = [];  // Files confirmed and shown as chips
+
+    function openModal() {
+        pendingFiles = [];
+        renderSelectedFiles();
+        modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+        pendingFiles = [];
+        renderSelectedFiles();
+        fileInput.value = '';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function getFileIcon(file) {
+        if (file.type.startsWith('image/')) return 'fa-image';
+        if (file.type === 'application/pdf') return 'fa-file-pdf';
+        if (file.name.match(/\.(js|ts|jsx|tsx|py|html|css|json|xml|yaml|yml)$/i)) return 'fa-file-code';
+        if (file.name.match(/\.(csv)$/i)) return 'fa-file-csv';
+        return 'fa-file-alt';
+    }
+
+    function addFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            // 20MB limit
+            if (file.size > 20 * 1024 * 1024) {
+                alert(`"${file.name}" is too large. Max size is 20MB.`);
+                return;
+            }
+            // Avoid duplicates
+            if (!pendingFiles.find(f => f.name === file.name && f.size === file.size)) {
+                pendingFiles.push(file);
+            }
         });
-        
-        // Suggestion buttons
-        document.querySelectorAll('.suggestion-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const prompt = this.getAttribute('data-prompt') || this.textContent;
-                if (window.xeerGPT && window.xeerGPT.userInput) {
-                    window.xeerGPT.userInput.value = prompt;
-                    window.xeerGPT.sendMessage();
-                }
+        renderSelectedFiles();
+    }
+
+    function renderSelectedFiles() {
+        selectedFilesList.innerHTML = '';
+        submitBtn.disabled = pendingFiles.length === 0;
+
+        pendingFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'selected-file-item';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'selected-file-thumb';
+                    item.insertBefore(img, item.firstChild);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'selected-file-icon';
+                iconDiv.innerHTML = `<i class="fas ${getFileIcon(file)}"></i>`;
+                item.appendChild(iconDiv);
+            }
+
+            item.innerHTML += `
+                <div class="selected-file-info">
+                    <div class="selected-file-name">${file.name}</div>
+                    <div class="selected-file-size">${formatFileSize(file.size)}</div>
+                </div>
+                <button class="selected-file-remove" data-index="${index}" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            item.querySelector('.selected-file-remove').addEventListener('click', () => {
+                pendingFiles.splice(index, 1);
+                renderSelectedFiles();
             });
+
+            selectedFilesList.appendChild(item);
+        });
+    }
+
+    function attachFiles() {
+        pendingFiles.forEach(file => {
+            if (!attachedFiles.find(f => f.name === file.name && f.size === file.size)) {
+                attachedFiles.push(file);
+            }
+        });
+        renderAttachedChips();
+        closeModal();
+    }
+
+    function renderAttachedChips() {
+        attachedFilesRow.innerHTML = '';
+        if (attachedFiles.length === 0) {
+            attachedFilesRow.classList.remove('has-files');
+            return;
+        }
+        attachedFilesRow.classList.add('has-files');
+
+        attachedFiles.forEach((file, index) => {
+            const chip = document.createElement('div');
+            chip.className = 'attached-file-chip';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    chip.insertBefore(img, chip.firstChild);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                chip.innerHTML = `<i class="fas ${getFileIcon(file)}"></i>`;
+            }
+
+            chip.innerHTML += `
+                <span class="attached-file-chip-name">${file.name}</span>
+                <button class="attached-file-chip-remove" data-index="${index}" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            chip.querySelector('.attached-file-chip-remove').addEventListener('click', () => {
+                attachedFiles.splice(index, 1);
+                renderAttachedChips();
+            });
+
+            attachedFilesRow.appendChild(chip);
+        });
+    }
+
+    // Expose attached files so sendMessage can access them
+    window.getAttachedFiles = () => attachedFiles;
+    window.clearAttachedFiles = () => {
+        attachedFiles = [];
+        renderAttachedChips();
+    };
+
+    // Events
+    fileUploadBtn.addEventListener('click', openModal);
+    modalClose.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    submitBtn.addEventListener('click', attachFiles);
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+    });
+
+    browseBtn.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        addFiles(e.target.files);
+        fileInput.value = '';
+    });
+
+    // Drag & drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        addFiles(e.dataTransfer.files);
+    });
+
+    // Global drag & drop onto page
+    document.addEventListener('dragover', (e) => e.preventDefault());
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length > 0) {
+            addFiles(e.dataTransfer.files);
+            openModal();
+        }
+    });
+
+    // ===== WELCOME SCREEN BUTTONS =====
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('skip_welcome') === 'true') {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('messagesContainer').style.display = 'flex';
+        setTimeout(() => document.getElementById('userInput')?.focus(), 100);
+    }
+
+    document.querySelectorAll('.starter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const prompt = this.getAttribute('data-prompt');
+            if (window.xeerGPT?.userInput) {
+                window.xeerGPT.userInput.value = prompt;
+                window.xeerGPT.sendMessage();
+            }
         });
     });
+
+    document.querySelectorAll('.suggestion-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const prompt = this.getAttribute('data-prompt') || this.textContent;
+            if (window.xeerGPT?.userInput) {
+                window.xeerGPT.userInput.value = prompt;
+                window.xeerGPT.sendMessage();
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

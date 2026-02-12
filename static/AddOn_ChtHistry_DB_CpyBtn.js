@@ -351,6 +351,24 @@ class AddOnChtHistryDBCpyBtn {
 
     async sendMessage() {
         const message = this.userInput?.value.trim();
+
+        // Check if there's pasted content in the preview
+        let fullMessage = message;
+        if (window.pasteHandler && window.pasteHandler.hasPastedContent()) {
+            const pastedContent = window.pasteHandler.getPastedContent();
+            
+            // Combine pasted content with user message
+            if (message) {
+                fullMessage = `${message}\n\n\`\`\`\n${pastedContent}\n\`\`\``;
+            } else {
+                fullMessage = `\`\`\`\n${pastedContent}\n\`\`\``;
+            }
+            
+            // Clear the preview
+            window.pasteHandler.hidePreview();
+            window.pasteHandler.clearPastedContent();
+        }
+
         if (!message || this.isTyping) return;
 
         console.log(`📤 Sending with model: ${this.selectedModel}`);

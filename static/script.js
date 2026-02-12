@@ -969,7 +969,8 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
     
-    if (document.getElementById('messages')) {
+   // AFTER (only initializes if AddOnChtHistryDBCpyBtn hasn't already run)
+    if (document.getElementById('messages') && !window.xeerGPT) {
         window.xeerGPT = new XeerGPTChat();
     }
     

@@ -1297,3 +1297,295 @@ code {
 .mb-2 { margin-bottom: var(--spacing-sm); }
 .mb-3 { margin-bottom: var(--spacing-md); }
 .mb-4 { margin-bottom: var(--spacing-lg); }
+
+/* ================ PASTE PREVIEW CARD (Claude-style) ================ */
+.paste-preview-container {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 12px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 100;
+}
+
+.paste-preview-container.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.paste-preview-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.paste-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.paste-preview-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.paste-preview-icon {
+    color: var(--accent-primary);
+    font-size: 1rem;
+}
+
+.paste-preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-primary);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.paste-preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.paste-preview-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.813rem;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.paste-preview-action-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.paste-preview-action-btn.expand {
+    color: var(--accent-primary);
+}
+
+.paste-preview-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+}
+
+.paste-preview-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+
+.paste-preview-content {
+    padding: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.813rem;
+    line-height: 1.6;
+    background: var(--bg-primary);
+}
+
+.paste-preview-content.expanded {
+    max-height: 400px;
+}
+
+.paste-preview-content pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.paste-preview-content code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--text-primary);
+}
+
+/* Line numbers for code preview */
+.paste-preview-line-numbers {
+    display: flex;
+    gap: 12px;
+}
+
+.paste-preview-lines {
+    color: var(--text-muted);
+    user-select: none;
+    text-align: right;
+    padding-right: 12px;
+    border-right: 1px solid var(--border-light);
+    min-width: 40px;
+}
+
+.paste-preview-code {
+    flex: 1;
+    overflow-x: auto;
+}
+
+/* Image preview */
+.paste-preview-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: var(--radius-md);
+    display: block;
+    margin: 0 auto;
+}
+
+/* File info */
+.paste-preview-file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.paste-preview-file-icon {
+    font-size: 2rem;
+    color: var(--accent-primary);
+}
+
+.paste-preview-file-details {
+    flex: 1;
+}
+
+.paste-preview-file-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.paste-preview-file-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Fade overlay at bottom when content is scrollable */
+.paste-preview-content::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--bg-primary));
+    pointer-events: none;
+}
+
+.paste-preview-content.expanded::after {
+    display: none;
+}
+
+/* Scrollbar styling for preview */
+.paste-preview-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.paste-preview-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.paste-preview-content::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+.paste-preview-content::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Language tag */
+.paste-preview-language {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-primary);
+    border-radius: 4px;
+    font-size: 0.688rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Animation for paste detection */
+@keyframes pasteGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.input-container.paste-detected {
+    animation: pasteGlow 0.6s ease-out;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .paste-preview-card {
+        margin: 0 12px;
+    }
+    
+    .paste-preview-content {
+        max-height: 150px;
+        font-size: 0.75rem;
+    }
+    
+    .paste-preview-content.expanded {
+        max-height: 300px;
+    }
+    
+    .paste-preview-line-numbers {
+        gap: 8px;
+    }
+}
