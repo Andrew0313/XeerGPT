@@ -168,19 +168,16 @@
     font-weight: 500;
 }
 
-/* ================ MESSAGE COPY BUTTON ================ */
+/* ================ MESSAGE COPY BUTTON - BELOW TEXT ================ */
 .message {
     position: relative;
 }
 
 .message-copy-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--text-muted);
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 11px;
@@ -188,7 +185,8 @@
     display: none;
     align-items: center;
     gap: 6px;
-    z-index: 10;
+    margin-top: 8px;
+    width: fit-content;
     backdrop-filter: blur(4px);
 }
 
@@ -212,25 +210,19 @@
     font-size: 11px;
 }
 
-/* Adjust user message for copy button positioning */
-.user-message {
-    position: relative;
+/* Position copy button for user messages (align right) */
+.user-message .message-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
-.user-message .message-copy-btn {
-    right: 48px; /* Space for avatar on right */
-}
-
-/* Adjust assistant message for copy button positioning */
-.assistant-message,
-.bot-message {
-    position: relative;
-}
-
-.assistant-message .message-copy-btn,
-.bot-message .message-copy-btn {
-    right: 8px;
-    left: auto;
+/* Position copy button for assistant messages (align left) */
+.assistant-message .message-content-wrapper,
+.bot-message .message-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 /* Light theme adjustments */

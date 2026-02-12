@@ -402,12 +402,17 @@ class AddOnChtHistryDBCpyBtn {
         avatar.className = 'message-avatar';
         avatar.innerHTML = '<div class="logo-icon-small">X</div>';
 
+        // Create wrapper for content + copy button
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'message-content-wrapper';
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         contentDiv.innerHTML = '<span class="typing-cursor">▋</span>';
 
+        contentWrapper.appendChild(contentDiv);
         messageDiv.appendChild(avatar);
-        messageDiv.appendChild(contentDiv);
+        messageDiv.appendChild(contentWrapper);
         this.messagesDiv.appendChild(messageDiv);
         this.scrollToBottom();
 
@@ -446,16 +451,16 @@ class AddOnChtHistryDBCpyBtn {
                             this.highlightCode(contentDiv);
                         }, 0);
                         
-                        // ADD MESSAGE COPY BUTTON AFTER STREAMING COMPLETES
+                        // ADD MESSAGE COPY BUTTON BELOW CONTENT
                         const copyBtn = this.createMessageCopyButton(fullContent);
-                        messageDiv.appendChild(copyBtn);
+                        contentWrapper.appendChild(copyBtn);
                         
                     } else if (data.type === 'error') {
                         contentDiv.innerHTML = this.renderMarkdown(data.message);
                         
                         // Add copy button even for errors
                         const copyBtn = this.createMessageCopyButton(data.message);
-                        messageDiv.appendChild(copyBtn);
+                        contentWrapper.appendChild(copyBtn);
                     }
                 }
             }
@@ -684,6 +689,10 @@ class AddOnChtHistryDBCpyBtn {
             ? '<i class="fas fa-user"></i>' 
             : '<div class="logo-icon-small">X</div>';
 
+        // Create wrapper for content + copy button
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'message-content-wrapper';
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
 
@@ -697,12 +706,15 @@ class AddOnChtHistryDBCpyBtn {
             contentDiv.textContent = content;
         }
 
-        messageDiv.appendChild(avatar);
-        messageDiv.appendChild(contentDiv);
+        // Add content to wrapper
+        contentWrapper.appendChild(contentDiv);
         
-        // Add message copy button
+        // Add message copy button below content
         const copyBtn = this.createMessageCopyButton(content);
-        messageDiv.appendChild(copyBtn);
+        contentWrapper.appendChild(copyBtn);
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(contentWrapper);
         
         this.messagesDiv.appendChild(messageDiv);
 
