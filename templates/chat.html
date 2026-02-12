@@ -9,6 +9,54 @@
 
 <style>
 
+/* Dark scrollbar for textarea (user input) */
+#userInput::-webkit-scrollbar {
+    width: 6px;
+}
+
+#userInput::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+#userInput::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+#userInput::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
+}
+
+#userInput {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-secondary);
+}
+
+/* Dark scrollbar for messages area */
+#messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#messages::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 3px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+#messages::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
+}
+
+#messages {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-primary);
+}
+
 /* Dark scrollbar for selected files list */
 .selected-files-list::-webkit-scrollbar {
     width: 6px;

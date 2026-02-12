@@ -1,0 +1,178 @@
+/* ========== IMPROVED MULTI-PASTE UI ========== */
+
+/* Multi-paste header (shows when 2+ items) */
+.paste-multi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 4px;
+}
+
+.paste-multi-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.paste-multi-info i {
+    color: var(--accent-primary);
+    font-size: 0.9rem;
+}
+
+.paste-multi-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.paste-multi-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.paste-multi-btn:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+}
+
+.paste-multi-btn i {
+    font-size: 0.7rem;
+}
+
+/* Cards stacking */
+.paste-preview-container {
+    max-height: 400px; /* Prevent going off-screen */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Individual card */
+.paste-preview-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Collapsed state - show header only */
+.paste-preview-card.collapsed .paste-preview-content {
+    display: none;
+}
+
+.paste-preview-card.collapsed {
+    border-color: var(--border-light);
+}
+
+/* Newest card highlight */
+.paste-preview-card.newest {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 1px rgba(16, 163, 127, 0.2);
+}
+
+/* NEW badge */
+.paste-newest-badge {
+    background: var(--accent-primary);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+}
+
+/* Header click to expand */
+.paste-preview-title {
+    cursor: pointer;
+    user-select: none;
+}
+
+.paste-preview-title:hover {
+    opacity: 0.85;
+}
+
+/* Expand button icon rotation */
+.paste-preview-action-btn.expand i {
+    transition: transform 0.2s ease;
+}
+
+.paste-preview-card:not(.collapsed) .paste-preview-action-btn.expand i {
+    transform: rotate(180deg);
+}
+
+/* Scrollbar for container */
+.paste-preview-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.paste-preview-container::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 3px;
+}
+
+.paste-preview-container::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+.paste-preview-container::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
+}
+
+.paste-preview-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--bg-primary);
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .paste-preview-container::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+}
+
+[data-theme="light"] .paste-preview-container::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+[data-theme="light"] .paste-preview-container {
+    scrollbar-color: var(--border-dark) var(--bg-primary);
+}
+
+/* Compact spacing when multiple cards */
+.paste-preview-container.active:has(.paste-multi-header) .paste-preview-card {
+    margin-bottom: 0;
+}
+
+/* Animation for new cards */
+@keyframes slideInCard {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.paste-preview-card.newest {
+    animation: slideInCard 0.3s ease;
+}
