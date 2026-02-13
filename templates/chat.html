@@ -781,13 +781,84 @@
 }
 
 /* Stop button styling */
-.send-btn.stop-btn {
-    background: #ef4444;
-    display: none;
+.send-btn-wrap {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
 }
 
-.send-btn.stop-btn:hover {
+.send-btn,
+.stop-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.send-btn {
+    background: var(--accent-primary);
+    color: white;
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    z-index: 2;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stop-btn {
+    background: #ef4444;
+    color: white;
+    opacity: 0;
+    transform: scale(0.8) rotate(90deg);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.stop-btn:hover {
     background: #dc2626;
+}
+
+/* When streaming is active */
+.send-btn-wrap.is-streaming .send-btn {
+    opacity: 0;
+    transform: scale(0.8) rotate(-90deg);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.send-btn-wrap.is-streaming .stop-btn {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    pointer-events: auto;
+    z-index: 2;
+    animation: pulse-stop 2s ease-in-out infinite;
+}
+
+@keyframes pulse-stop {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
 }
 
 /* Light theme adjustments */
@@ -959,9 +1030,15 @@
                     <div class="model-dropdown" id="modelDropdown"></div>
                 </div>
 
-                <button class="send-btn" id="sendBtn" title="Send message">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <!-- Send/Stop button wrapper -->
+                <div class="send-btn-wrap" id="sendBtnWrap">
+                    <button class="send-btn" id="sendBtn" title="Send message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button class="send-btn stop-btn" id="stopBtn" title="Stop generation">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="input-footer">
