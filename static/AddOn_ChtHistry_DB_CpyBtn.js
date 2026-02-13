@@ -41,6 +41,7 @@ class AddOnChtHistryDBCpyBtn {
         this.modelDropdown = document.getElementById('modelDropdown');
         this.selectedModelIcon = document.getElementById('selectedModelIcon');
         this.selectedModelName = document.getElementById('selectedModelName');
+        this.scrollBtn = this.createScrollButton();
 
         if (this.messagesDiv) {
         this.messagesDiv.addEventListener('scroll', () => {
@@ -156,6 +157,62 @@ class AddOnChtHistryDBCpyBtn {
         if (this.modelDropdown) this.modelDropdown.classList.remove('open');
         if (this.modelSelectorBtn) this.modelSelectorBtn.classList.remove('open');
     }
+
+    createScrollButton() {
+        const btn = document.createElement('button');
+        btn.id = 'scrollToBottomBtn';
+        btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        btn.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 500;
+            transition: all 0.2s ease;
+        `;
+
+        // Hover effect
+        btn.addEventListener('mouseenter', () => {
+            btn.style.background = 'var(--bg-tertiary)';
+            btn.style.borderColor = 'var(--accent-primary)';
+            btn.style.transform = 'scale(1.1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.background = 'var(--bg-secondary)';
+            btn.style.borderColor = 'var(--border-light)';
+            btn.style.transform = 'scale(1)';
+        });
+
+        // Click — snap to bottom and resume auto-scroll
+        btn.addEventListener('click', () => {
+            this.userScrolled = false;
+            this.scrollToBottom(true);
+        });
+
+        document.body.appendChild(btn);
+
+        // Show/hide based on scroll position
+        if (this.messagesDiv) {
+            this.messagesDiv.addEventListener('scroll', () => {
+                const el = this.messagesDiv;
+                const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+                btn.style.display = distanceFromBottom > 100 ? 'flex' : 'none';
+            });
+        }
+
+        return btn;
+    }    
 
     attachEventListeners() {
         if (this.sendBtn) {
