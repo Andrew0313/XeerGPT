@@ -1246,18 +1246,17 @@ code {
 .input-box {
     flex: 1;
     background: var(--bg-secondary);
-    border: 2px solid var(--border-light);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
     display: flex;
     align-items: flex-end;
     gap: var(--spacing-sm);
-    transition: all var(--transition-base);
+    transition: border-color var(--transition-base);
 }
 
 .input-box:focus-within {
     border-color: var(--accent-primary);
-    background: var(--bg-hover);
 }
 
 .input-box textarea {
@@ -1271,7 +1270,6 @@ code {
     outline: none;
     max-height: 150px;
     min-height: 24px;
-    line-height: 1.5;
 }
 
 .input-box textarea::placeholder {
