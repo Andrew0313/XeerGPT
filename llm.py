@@ -19,6 +19,13 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
+# Gemini (Google GenAI)
+try:
+    from google import genai as google_genai
+    GOOGLE_GENAI_AVAILABLE = True
+except ImportError:
+    GOOGLE_GENAI_AVAILABLE = False
+   
 # Load multiple API keys
 def load_api_keys(prefix):
     """Load multiple API keys from environment"""
@@ -70,6 +77,20 @@ if OPENAI_AVAILABLE:
         if openrouter_clients:
             print(f"✅ OpenRouter configured with {len(openrouter_clients)} key(s)")
 
+# Load Google Gemini clients
+gemini_clients = []
+if GOOGLE_GENAI_AVAILABLE:
+    gemini_keys = load_api_keys("GEMINI_API_KEY")
+    if gemini_keys:
+        for key in gemini_keys:
+            try:
+                client = google_genai.Client(api_key=key)
+                gemini_clients.append(client)
+            except Exception as e:
+                print(f"⚠️ Gemini key error: {e}")
+        if gemini_clients:
+            print(f"✅ Google Gemini configured with {len(gemini_clients)} key(s)")
+            
 # VERIFIED WORKING MODELS
 AVAILABLE_MODELS = {
     # ── Groq Models (Direct - Fastest, your own keys) ─────────────────────
@@ -149,7 +170,33 @@ AVAILABLE_MODELS = {
     "description": "Conversational, roleplay",
     "icon": "✨"
     },
+    
+    #google gemini models ─────────────────────────────────────────────
+    
+    "gemini-3-pro": {
+        "provider": "gemini",
+        "model_id": "gemini-3-pro-preview",
+        "name": "Gemini 3 Pro",
+        "description": "Most powerful Gemini, agentic & multimodal",
+        "icon": "🌟"
+    },
+    "gemini-2.5-pro": {
+        "provider": "gemini",
+        "model_id": "gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro",
+        "description": "Deep reasoning, 1M context",
+        "icon": "🔮"
+    },
+    "gemini-2.5-flash": {
+        "provider": "gemini",
+        "model_id": "gemini-2.5-flash",
+        "name": "Gemini 2.5 Flash",
+        "description": "Best price-performance, thinking support",
+        "icon": "💎"
+    },
 }
+
+
 
 def chat_with_groq(message: str, model: str = "llama-3.3-70b-versatile") -> str:
     """Try all Groq keys until one works"""
@@ -201,6 +248,31 @@ def chat_with_openrouter(message: str, model: str = "meta-llama/llama-3.1-70b-in
     
     raise Exception(f"All OpenRouter keys exhausted: {str(last_error)}")
 
+# ── ADD this function alongside chat_with_groq / chat_with_openrouter ──────
+
+def chat_with_gemini(message: str, model: str = "gemini-2.5-flash") -> str:
+    """Try all Gemini keys until one works"""
+    if not gemini_clients:
+        raise Exception("Google Gemini not configured")
+
+    last_error = None
+    for client in gemini_clients:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=message,
+            )
+            return response.text
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "quota" in error_str.lower() or "rate" in error_str.lower():
+                last_error = e
+                continue
+            else:
+                raise Exception(f"Gemini API Error: {error_str}")
+
+    raise Exception(f"All Gemini keys exhausted: {str(last_error)}")
+
 def llm_chat(message: str, model: str = "llama-3.3-70b") -> str:
     """Main chat function - routes to correct provider"""
     model_info = AVAILABLE_MODELS.get(model)
@@ -215,6 +287,8 @@ def llm_chat(message: str, model: str = "llama-3.3-70b") -> str:
         return chat_with_groq(message, model_id)
     elif provider == "openrouter":
         return chat_with_openrouter(message, model_id)
+    elif provider == "gemini":
+        return chat_with_gemini(message, model_id)
     else:
         raise Exception(f"Unknown provider: {provider}")
 
@@ -229,10 +303,12 @@ def get_available_models():
             continue
         if provider == "openrouter" and not openrouter_clients:
             continue
-        
+        if provider == "gemini" and not gemini_clients:
+            continue
         provider_display = {
             "groq": "Groq (Fast)",
-            "openrouter": "OpenRouter (Free)"
+            "openrouter": "OpenRouter (Free)",
+            "gemini": "Google Gemini (Official)"
         }
         
         if provider not in providers:
