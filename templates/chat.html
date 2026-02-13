@@ -1256,83 +1256,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-</script>
-
 <!-- ═══════════════════════════════════════════════════════════════════════
-     ANIMATED LOGO JAVASCRIPT
+     INTEGRATION WITH CHAT SYSTEM - IMPROVED TIMING
      ═══════════════════════════════════════════════════════════════════════ -->
 <script>
-(function() {
-    'use strict';
+// Wait for xeerGPT to be fully initialized before patching
+function waitForXeerGPT(callback, maxAttempts = 20) {
+    let attempts = 0;
     
-    console.log('🎨 Initializing XeerGPT Animated Logo...');
-    
-    /**
-     * Create an animated or static logo element
-     * @param {boolean} isAnimating - Whether the logo should animate
-     * @returns {HTMLElement} The logo element
-     */
-    window.createXeerLogo = function(isAnimating = false) {
-        const logo = document.createElement('div');
-        logo.className = 'xeer-logo';
+    const checkInterval = setInterval(() => {
+        attempts++;
         
-        if (isAnimating) {
-            logo.classList.add('animating');
-        } else {
-            logo.classList.add('static');
+        if (window.xeerGPT) {
+            clearInterval(checkInterval);
+            console.log('✅ xeerGPT found, applying animated logo patches...');
+            callback();
+        } else if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            console.warn('⚠️ xeerGPT not found after ' + maxAttempts + ' attempts');
         }
-        
-        const letter = document.createElement('span');
-        letter.className = 'xeer-letter';
-        letter.textContent = 'X';
-        logo.appendChild(letter);
-        
-        return logo;
-    };
-    
-    /**
-     * Start animation on a logo element
-     * @param {HTMLElement} logoElement - The logo to animate
-     */
-    window.startLogoAnimation = function(logoElement) {
-        if (!logoElement) return;
-        logoElement.classList.remove('static');
-        logoElement.classList.add('animating');
-    };
-    
-    /**
-     * Stop animation on a logo element
-     * @param {HTMLElement} logoElement - The logo to stop animating
-     */
-    window.stopLogoAnimation = function(logoElement) {
-        if (!logoElement) return;
-        logoElement.classList.remove('animating');
-        logoElement.classList.add('static');
-    };
-    
-    console.log('✅ XeerGPT Animated Logo initialized');
-    
-})();
-</script>
+    }, 100); // Check every 100ms
+}
 
-<!-- ═══════════════════════════════════════════════════════════════════════
-     INTEGRATION WITH CHAT SYSTEM
-     ═══════════════════════════════════════════════════════════════════════ -->
-<script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Patching chat system for animated logos...');
+    console.log('🔧 Waiting for xeerGPT to initialize...');
     
-    // Wait for xeerGPT to initialize
-    setTimeout(function() {
-        if (!window.xeerGPT) {
-            console.warn('⚠️ xeerGPT not found, skipping logo patch');
-            return;
-        }
-        
+    waitForXeerGPT(function() {
         // ═══════════════════════════════════════════════════════════════════
         // PATCH 1: Override displayMessage to use animated logos
         // ═══════════════════════════════════════════════════════════════════
-        const originalDisplayMessage = window.xeerGPT.displayMessage;
+        const originalDisplayMessage = window.xeerGPT.displayMessage.bind(window.xeerGPT);
         window.xeerGPT.displayMessage = function(content, role, shouldScroll = true) {
             if (!this.messagesDiv) return;
             
@@ -1345,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (role === 'user') {
                 avatar.innerHTML = '<i class="fas fa-user"></i>';
             } else {
-               // ✅ USE ANIMATED LOGO
+                // ✅ USE ANIMATED LOGO
                 avatar.className = 'message-avatar bot';
                 if (window.createXeerLogo) {
                     const logo = window.createXeerLogo(false); // false = static
@@ -1387,7 +1340,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // ═══════════════════════════════════════════════════════════════════
         // PATCH 2: Override fetchBotResponseStreaming to use animated logos
         // ═══════════════════════════════════════════════════════════════════
-        const originalFetchBotResponseStreaming = window.xeerGPT.fetchBotResponseStreaming;
+        const originalFetchBotResponseStreaming = window.xeerGPT.fetchBotResponseStreaming.bind(window.xeerGPT);
         window.xeerGPT.fetchBotResponseStreaming = async function(message) {
             this.currentAbortController = new AbortController();
             this.showStreamingState();
@@ -1429,12 +1382,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar bot';
             
-            // ✅ USE ANIMATED LOGO
+            // ✅ CREATE ANIMATED LOGO
+            let logo;
             if (window.createXeerLogo) {
-                const logo = window.createXeerLogo(true); // true = animating
+                logo = window.createXeerLogo(true); // true = animating
                 avatar.appendChild(logo);
+                console.log('🎨 Created animated logo');
             } else {
                 avatar.innerHTML = '<div class="logo-icon-small">X</div>';
+                console.warn('⚠️ createXeerLogo not found, using fallback');
             }
 
             const contentWrapper = document.createElement('div');
@@ -1481,9 +1437,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                             } else if (data.type === 'done') {
                                 // ✅ STOP LOGO ANIMATION
-                                const logo = avatar.querySelector('.xeer-logo');
+                                messageDiv.classList.remove('streaming');
                                 if (logo && window.stopLogoAnimation) {
                                     window.stopLogoAnimation(logo);
+                                    console.log('⏹️ Stopped logo animation');
                                 }
                                 
                                 contentDiv.innerHTML = this.renderMarkdown(fullContent);
@@ -1496,7 +1453,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                             } else if (data.type === 'error') {
                                 messageDiv.classList.remove('streaming');
-                                window.stopLogoAnimation(logo);
+                                if (logo && window.stopLogoAnimation) {
+                                    window.stopLogoAnimation(logo);
+                                }
                                 
                                 contentDiv.innerHTML = this.renderMarkdown(data.message);
                                 const copyBtn = this.createMessageCopyButton(data.message);
@@ -1511,7 +1470,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     messageDiv.classList.remove('streaming');
                     
                     // Stop logo animation
-                    window.stopLogoAnimation(logo);
+                    if (logo && window.stopLogoAnimation) {
+                        window.stopLogoAnimation(logo);
+                    }
                     
                     if (fullContent) {
                         contentDiv.innerHTML = this.renderMarkdown(fullContent) +
@@ -1538,7 +1499,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // ═══════════════════════════════════════════════════════════════════
         // PATCH 3: Ensure stopStreaming stops all logo animations
         // ═══════════════════════════════════════════════════════════════════
-        const originalStopStreaming = window.xeerGPT.stopStreaming;
+        const originalStopStreaming = window.xeerGPT.stopStreaming.bind(window.xeerGPT);
         window.xeerGPT.stopStreaming = function() {
             console.log('🛑 Stopping stream and animations...');
             if (this.currentAbortController) {
@@ -1552,13 +1513,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Stop all logo animations
             const allLogos = document.querySelectorAll('.xeer-logo.animating');
             allLogos.forEach(logo => {
-                window.stopLogoAnimation(logo);
+                if (window.stopLogoAnimation) {
+                    window.stopLogoAnimation(logo);
+                }
             });
         };
         
         console.log('✅ Chat system patched for animated logos');
-        
-    }, 500); // Wait 500ms for xeerGPT to initialize
+    });
 });
 </script>
 
