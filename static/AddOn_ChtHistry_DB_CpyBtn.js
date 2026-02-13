@@ -11,7 +11,8 @@ class AddOnChtHistryDBCpyBtn {
         this.searchTimerInterval = null;
         this.currentAbortController = null;
         this.isSearching = false;
-        
+        this.userScrolled = false;
+
         this.initializeElements();
         this.attachEventListeners();
         this.loadConversations();
@@ -40,8 +41,18 @@ class AddOnChtHistryDBCpyBtn {
         this.modelDropdown = document.getElementById('modelDropdown');
         this.selectedModelIcon = document.getElementById('selectedModelIcon');
         this.selectedModelName = document.getElementById('selectedModelName');
-    }
 
+        if (this.messagesDiv) {
+        this.messagesDiv.addEventListener('scroll', () => {
+            const el = this.messagesDiv;
+            const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+            // If user scrolled more than 100px from bottom, pause auto-scroll
+            this.userScrolled = distanceFromBottom > 100;
+            });
+    
+
+        }
+    }
     async loadAvailableModels() {
         try {
             const response = await fetch('/api/models');
@@ -377,6 +388,9 @@ class AddOnChtHistryDBCpyBtn {
             this.userInput.style.height = 'auto';
         }
 
+        this.userScrolled = false;      // ← reset BEFORE streaming starts
+        this.scrollToBottom(true);      // ← snap to bottom when user sends
+
         this.showTypingIndicator();
 
         try {
@@ -391,7 +405,6 @@ class AddOnChtHistryDBCpyBtn {
             }
         }
 
-        this.scrollToBottom();
     }
 
     async fetchBotResponseStreaming(message) {
@@ -829,10 +842,15 @@ class AddOnChtHistryDBCpyBtn {
     }
 
     scrollToBottom(force = false) {
-        if (!this.messagesDiv) return;
-        requestAnimationFrame(() => {
-            this.messagesDiv.scrollTop = this.messagesDiv.scrollHeight;
-        });
+    if (!this.messagesDiv) return;
+    
+        // force=true: always scroll (used when sending a new message)
+        // force=false: only scroll if user hasn't manually scrolled up
+        if (force || !this.userScrolled) {
+            requestAnimationFrame(() => {
+                this.messagesDiv.scrollTop = this.messagesDiv.scrollHeight;
+            });
+        }
     }
 
     showNotification(message, type = 'info') {
