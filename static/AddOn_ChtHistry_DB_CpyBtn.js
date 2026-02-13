@@ -912,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
             font-weight: bold;
         }
         @keyframes blink {
-            0%, 49%  { opacity: 1; }
+            0%, 49%  { opacity: 0; }
             50%, 100% { opacity: 0; }
         }
     `;
