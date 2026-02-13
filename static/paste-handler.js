@@ -17,6 +17,9 @@ class PasteHandler {
         this.userInput = document.getElementById('userInput');
         this.inputContainer = document.getElementById('inputContainer');
         this.previewContainer = document.getElementById('pastePreviewContainer');
+
+        // ── These single-card refs are kept for legacy compat but are NOT
+        //    relied on after renderAllCards() replaces innerHTML ──
         this.previewTitle = document.getElementById('pastePreviewTitle');
         this.previewBadge = document.getElementById('pastePreviewBadge');
         this.previewLineCount = document.getElementById('pastePreviewLineCount');
@@ -32,17 +35,17 @@ class PasteHandler {
             this.userInput.addEventListener('paste', (e) => this.handlePaste(e));
         }
         
-        // Close preview
+        // Close preview (legacy single-card button - may not exist after renderAllCards)
         if (this.previewClose) {
             this.previewClose.addEventListener('click', () => this.hidePreview());
         }
         
-        // Expand/Collapse preview
+        // Expand/Collapse preview (legacy single-card button)
         if (this.previewExpand) {
             this.previewExpand.addEventListener('click', () => this.toggleExpand());
         }
 
-        // NEW: Ctrl+Z = undo last paste card, Ctrl+Y = redo
+        // Ctrl+Z = undo last paste card, Ctrl+Y = redo
         if (this.userInput) {
             this.userInput.addEventListener('keydown', (e) => {
                 if (e.ctrlKey && !e.shiftKey && e.key === 'z') {
@@ -66,12 +69,10 @@ class PasteHandler {
         
         // Check for files first
         const items = clipboardData.items;
-        let hasFiles = false;
         
         if (items) {
             for (let item of items) {
                 if (item.kind === 'file') {
-                    hasFiles = true;
                     // Let file upload handler manage this
                     return;
                 }
@@ -90,7 +91,7 @@ class PasteHandler {
         // If content is large enough, show preview instead
         if (lineCount >= this.MIN_LINES_FOR_PREVIEW) {
             e.preventDefault(); // Prevent default paste
-            this.addPasteItem(pastedText, lineCount);  // NEW: add to list instead of replace
+            this.addPasteItem(pastedText, lineCount);
         } else {
             // For smaller content, allow normal paste
             if (this.inputContainer) {
@@ -102,7 +103,7 @@ class PasteHandler {
         }
     }
 
-    // NEW: Add a new paste item and re-render all cards
+    // Add a new paste item and re-render all cards
     addPasteItem(content, lineCount) {
         const id = this.nextId++;
         const detection = this.detectContentType(content);
@@ -113,7 +114,7 @@ class PasteHandler {
         if (this.userInput) this.userInput.focus();
     }
 
-    // NEW: Render all paste cards into the preview container
+    // Render all paste cards into the preview container
     renderAllCards() {
         if (!this.previewContainer) return;
 
@@ -187,7 +188,7 @@ class PasteHandler {
         });
     }
 
-    // NEW: Build a single paste card element
+    // Build a single paste card element
     buildCard(item, isNewest = false) {
         const { id, content, lineCount, detection } = item;
 
@@ -222,6 +223,7 @@ class PasteHandler {
                 </button>
                 <button class="paste-preview-close" title="Remove">
                     <i class="fas fa-times"></i>
+                    <span class="close-label"></span>
                 </button>
             </div>
         `;
@@ -247,19 +249,28 @@ class PasteHandler {
         header.querySelector('.expand').addEventListener('click', (e) => {
             e.stopPropagation();
             const btn = e.currentTarget;
-            const expanded = card.classList.toggle('collapsed');
-            btn.innerHTML = !expanded
+            const closeBtn = header.querySelector('.paste-preview-close');
+            const closeLabel = closeBtn.querySelector('.close-label');
+            const isNowCollapsed = card.classList.toggle('collapsed');
+
+            btn.innerHTML = !isNowCollapsed
                 ? '<i class="fas fa-chevron-up"></i><span>Collapse</span>'
                 : '<i class="fas fa-chevron-down"></i><span>Expand</span>';
+
+            // When expanded show "Remove" text, when collapsed show just the X icon
+            if (!isNowCollapsed) {
+                closeBtn.innerHTML = '<i class="fas fa-times"></i><span class="close-label"> Remove</span>';
+            } else {
+                closeBtn.innerHTML = '<i class="fas fa-times"></i><span class="close-label"></span>';
+            }
         });
 
-        // Click header to expand/collapse too
+        // Click header title to expand/collapse too
         header.querySelector('.paste-preview-title').addEventListener('click', () => {
-            const btn = header.querySelector('.expand');
-            btn.click();
+            header.querySelector('.expand').click();
         });
 
-        // Close button
+        // Close button - remove this specific card
         header.querySelector('.paste-preview-close').addEventListener('click', (e) => {
             e.stopPropagation();
             const found = this.pastedItems.find(i => i.id === id);
@@ -276,7 +287,7 @@ class PasteHandler {
         return card;
     }
 
-    // NEW: Ctrl+Z - remove last pasted card
+    // Ctrl+Z - remove last pasted card
     undoLastPaste() {
         const last = this.pastedItems[this.pastedItems.length - 1];
         if (!last) return;
@@ -289,7 +300,7 @@ class PasteHandler {
         this.showToast('Paste removed — Ctrl+Y to redo');
     }
 
-    // NEW: Ctrl+Y - restore last removed card
+    // Ctrl+Y - restore last removed card
     redoLastPaste() {
         const item = this.undoStack.pop();
         if (!item) return;
@@ -313,44 +324,6 @@ class PasteHandler {
         toast.textContent = msg;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 2000);
-    }
-    
-    showPreview(content, lineCount) {
-        this.pastedContent = content;
-        
-        // Detect content type and language
-        const detection = this.detectContentType(content);
-        
-        // Update header
-        if (this.previewTitle) this.previewTitle.textContent = detection.title;
-        if (this.previewLineCount) this.previewLineCount.textContent = `${lineCount.toLocaleString()} lines`;
-        
-        // Show language badge if it's code
-        if (this.previewLanguage) {
-            if (detection.language) {
-                this.previewLanguage.textContent = detection.language.toUpperCase();
-                this.previewLanguage.style.display = 'inline-block';
-            } else {
-                this.previewLanguage.style.display = 'none';
-            }
-        }
-        
-        // Update badge icon
-        if (this.previewBadge) {
-            const badgeIcon = this.previewBadge.querySelector('i');
-            if (badgeIcon) badgeIcon.className = `fas ${detection.icon}`;
-        }
-        
-        // Render content with syntax highlighting or line numbers
-        this.renderPreviewContent(content, detection.language);
-        
-        // Show preview with animation
-        requestAnimationFrame(() => {
-            if (this.previewContainer) this.previewContainer.classList.add('active');
-        });
-        
-        // Focus stays on input
-        if (this.userInput) this.userInput.focus();
     }
     
     detectContentType(content) {
@@ -383,32 +356,6 @@ class PasteHandler {
         return { title: 'Text Document', language: null, icon: 'fa-file-lines' };
     }
     
-    detectLanguageFromContent(content) {
-        if (content.includes('<?php')) return 'php';
-        if (content.includes('function') && content.includes('=>')) return 'javascript';
-        if (content.includes('def ') && content.includes(':')) return 'python';
-        if (content.includes('<html') || content.includes('<!DOCTYPE')) return 'html';
-        if (content.includes('.class') || content.includes('public static')) return 'java';
-        if (content.includes('#include') || content.includes('int main')) return 'cpp';
-        return null;
-    }
-    
-    renderPreviewContent(content, language) {
-        if (!this.previewContent) return;
-        const lines = content.split('\n');
-        const lineNumbers = lines.map((_, i) => i + 1).join('\n');
-        this.previewContent.innerHTML = `
-            <div class="paste-preview-line-numbers">
-                <pre class="paste-preview-lines">${lineNumbers}</pre>
-                <pre class="paste-preview-code"><code>${this.escapeHtml(content)}</code></pre>
-            </div>
-        `;
-        if (window.hljs && language) {
-            const codeBlock = this.previewContent.querySelector('code');
-            try { hljs.highlightElement(codeBlock); } catch (e) {}
-        }
-    }
-    
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -417,29 +364,35 @@ class PasteHandler {
     
     toggleExpand() {
         this.isExpanded = !this.isExpanded;
-        if (this.previewContent) {
+        // Find the active single card content if present
+        const content = this.previewContainer?.querySelector('.paste-preview-content');
+        if (content) {
             if (this.isExpanded) {
-                this.previewContent.classList.add('expanded');
+                content.classList.add('expanded');
                 if (this.previewExpand) this.previewExpand.innerHTML = '<i class="fas fa-compress-alt"></i><span>Collapse</span>';
             } else {
-                this.previewContent.classList.remove('expanded');
+                content.classList.remove('expanded');
                 if (this.previewExpand) this.previewExpand.innerHTML = '<i class="fas fa-expand-alt"></i><span>Expand</span>';
             }
         }
     }
     
+    // ✅ FIXED: hidePreview now correctly clears both old single-card UI
+    //    and the new multi-card system without relying on stale element refs
     hidePreview() {
-        if (this.previewContainer) this.previewContainer.classList.remove('active');
+        if (this.previewContainer) {
+            this.previewContainer.classList.remove('active');
+        }
         this.isExpanded = false;
-        if (this.previewContent) {
-            this.previewContent.classList.remove('expanded');
-        }
-        if (this.previewExpand) {
-            this.previewExpand.innerHTML = '<i class="fas fa-expand-alt"></i><span>Expand</span>';
-        }
+
         setTimeout(() => {
-            if (this.previewContent) this.previewContent.innerHTML = '';
-            this.pastedContent = null;
+            if (this.previewContainer) {
+                this.previewContainer.innerHTML = '';
+            }
+            // Reset stale legacy refs so they don't cause errors
+            this.previewContent = null;
+            this.previewExpand = null;
+            this.previewClose = null;
         }, 300);
     }
     

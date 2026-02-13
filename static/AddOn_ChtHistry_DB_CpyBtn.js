@@ -12,7 +12,6 @@ class AddOnChtHistryDBCpyBtn {
         this.selectedModel = localStorage.getItem('xeergpt_selected_model') || 'gemini-1.5-flash';
         this.availableModels = {};
         
-        // Concert search properties
         this.searchStartTime = null;
         this.searchTimerInterval = null;
         this.currentAbortController = null;
@@ -38,11 +37,9 @@ class AddOnChtHistryDBCpyBtn {
         this.historyItems = document.getElementById('historyItems');
         this.newChatBtn = document.getElementById('newChatBtn');
         
-        // ── Stop button (added in chat.html inside .send-btn-wrap) ──
         this.sendBtnWrap = document.getElementById('sendBtnWrap');
         this.stopBtn = document.getElementById('stopBtn');
         
-        // Model selector elements (beside send button)
         this.modelSelectorBtn = document.getElementById('modelSelectorBtn');
         this.modelDropdown = document.getElementById('modelDropdown');
         this.selectedModelIcon = document.getElementById('selectedModelIcon');
@@ -125,10 +122,8 @@ class AddOnChtHistryDBCpyBtn {
     selectModel(modelKey, icon, name) {
         this.selectedModel = modelKey;
         localStorage.setItem('xeergpt_selected_model', modelKey);
-        
         this.updateSelectedModelDisplay(icon, name);
         this.renderModelSelector();
-        
         console.log(`🤖 Selected model: ${modelKey}`);
         this.showNotification(`Switched to ${name}`, 'success');
     }
@@ -189,7 +184,6 @@ class AddOnChtHistryDBCpyBtn {
             btn.style.borderColor = 'var(--border-light)';
             btn.style.transform = 'scale(1)';
         });
-
         btn.addEventListener('click', () => {
             this.userScrolled = false;
             this.scrollToBottom(true);
@@ -256,6 +250,7 @@ class AddOnChtHistryDBCpyBtn {
         if (this.sendBtnWrap) this.sendBtnWrap.classList.remove('is-streaming');
     }
 
+    // ── stopStreaming is patched by logo.js — this is the fallback ──
     stopStreaming() {
         if (this.currentAbortController) {
             this.currentAbortController.abort();
@@ -288,7 +283,6 @@ class AddOnChtHistryDBCpyBtn {
         try {
             const response = await fetch('/api/conversations');
             if (!response.ok) throw new Error('Failed to load conversations');
-            
             const data = await response.json();
             this.renderConversationHistory(data.conversations || []);
             console.log(`📋 Loaded ${data.conversations?.length || 0} conversations`);
@@ -405,7 +399,6 @@ class AddOnChtHistryDBCpyBtn {
     async sendMessage() {
         const message = this.userInput?.value.trim();
 
-        // Merge any pasted snippets into the message
         let fullMessage = message;
         if (window.pasteHandler && window.pasteHandler.hasPastedContent()) {
             const pastedContent = window.pasteHandler.getPastedContent();
@@ -431,17 +424,15 @@ class AddOnChtHistryDBCpyBtn {
             this.userInput.style.height = 'auto';
         }
 
-        this.userScrolled = false;      // ← reset BEFORE streaming starts
-        this.scrollToBottom(true);      // ← snap to bottom when user sends
-
+        this.userScrolled = false;
+        this.scrollToBottom(true);
         this.showTypingIndicator();
 
         try {
-            // ── CHANGED: pass fullMessage (with pasted content) ──
             await this.fetchBotResponseStreaming(fullMessage);
         } catch (error) {
             this.hideTypingIndicator();
-            this.hideStreamingState();// ← restore Send button on error
+            this.hideStreamingState();
             console.error('❌ Chat error:', error);
             if (error.name !== 'AbortError') {
                 this.displayMessage('Connection error. Please try again.', 'assistant');
@@ -449,6 +440,8 @@ class AddOnChtHistryDBCpyBtn {
         }
     }
 
+    // ── fetchBotResponseStreaming is patched by logo.js ──
+    // ── This fallback runs only if logo.js fails to load ──
     async fetchBotResponseStreaming(message) {
         this.currentAbortController = new AbortController();
         this.showStreamingState();
@@ -479,20 +472,13 @@ class AddOnChtHistryDBCpyBtn {
         }
 
         this.hideTypingIndicator();
-        
+
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message assistant-message streaming';
 
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar bot';
-        
-        let logo;
-        if (window.createXeerLogo) {
-            logo = window.createXeerLogo(true);
-            avatar.appendChild(logo);
-        } else {
-            avatar.innerHTML = '<div class="logo-icon-small">X</div>';
-        }
+        avatar.innerHTML = '<div class="logo-icon-small">X</div>';
 
         const contentWrapper = document.createElement('div');
         contentWrapper.className = 'message-content-wrapper';
@@ -524,23 +510,19 @@ class AddOnChtHistryDBCpyBtn {
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const data = JSON.parse(line.slice(6));
-                        
+
                         if (data.type === 'conversation_id') {
                             const wasNew = this.currentConversationId === null;
                             this.currentConversationId = data.conversation_id;
                             if (wasNew) await this.loadConversations();
-                            
+
                         } else if (data.type === 'content') {
                             fullContent += data.content;
                             contentDiv.innerHTML = this.renderMarkdown(fullContent) + '<span class="typing-cursor">▋</span>';
                             this.scrollToBottom();
-                            
+
                         } else if (data.type === 'done') {
                             messageDiv.classList.remove('streaming');
-                            if (logo && window.stopLogoAnimation) {
-                                window.stopLogoAnimation(logo);
-                            }
-                            
                             contentDiv.innerHTML = this.renderMarkdown(fullContent);
                             setTimeout(() => {
                                 this.addCopyButtons(contentDiv);
@@ -548,13 +530,9 @@ class AddOnChtHistryDBCpyBtn {
                             }, 0);
                             const actionBar = this.createMessageActionBar(fullContent, 'assistant');
                             contentWrapper.appendChild(actionBar);
-                            
+
                         } else if (data.type === 'error') {
                             messageDiv.classList.remove('streaming');
-                            if (logo && window.stopLogoAnimation) {
-                                window.stopLogoAnimation(logo);
-                            }
-                            
                             contentDiv.innerHTML = this.renderMarkdown(data.message);
                             const actionBar = this.createMessageActionBar(data.message, 'assistant');
                             contentWrapper.appendChild(actionBar);
@@ -565,11 +543,6 @@ class AddOnChtHistryDBCpyBtn {
         } catch (err) {
             if (err.name === 'AbortError') {
                 messageDiv.classList.remove('streaming');
-                
-                if (logo && window.stopLogoAnimation) {
-                    window.stopLogoAnimation(logo);
-                }
-                
                 if (fullContent) {
                     contentDiv.innerHTML = this.renderMarkdown(fullContent) +
                         '<p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px">' +
@@ -610,7 +583,6 @@ class AddOnChtHistryDBCpyBtn {
                 tempDiv.innerHTML = content;
                 const plainText = tempDiv.textContent || tempDiv.innerText || content;
                 await navigator.clipboard.writeText(plainText);
-                
                 const originalHTML = copyBtn.innerHTML;
                 copyBtn.innerHTML = '<i class="fas fa-check"></i>';
                 copyBtn.classList.add('active');
@@ -618,7 +590,6 @@ class AddOnChtHistryDBCpyBtn {
                     copyBtn.innerHTML = originalHTML;
                     copyBtn.classList.remove('active');
                 }, 2000);
-                
                 this.showNotification('Copied to clipboard', 'success');
             } catch (error) {
                 this.showNotification('Failed to copy', 'error');
@@ -704,18 +675,14 @@ class AddOnChtHistryDBCpyBtn {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = content;
                 const plainText = tempDiv.textContent || tempDiv.innerText || content;
-                
                 await navigator.clipboard.writeText(plainText);
-                
                 const originalHTML = copyBtn.innerHTML;
                 copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 copyBtn.classList.add('copied');
-                
                 setTimeout(() => {
                     copyBtn.innerHTML = originalHTML;
                     copyBtn.classList.remove('copied');
                 }, 2000);
-                
                 this.showNotification('Message copied to clipboard', 'success');
             } catch (error) {
                 console.error('Copy failed:', error);
@@ -726,6 +693,8 @@ class AddOnChtHistryDBCpyBtn {
         return copyBtn;
     }
 
+    // ── displayMessage is patched by logo.js ──
+    // ── This fallback runs only if logo.js fails to load ──
     displayMessage(content, role, shouldScroll = true) {
         if (!this.messagesDiv) return;
         
@@ -733,18 +702,13 @@ class AddOnChtHistryDBCpyBtn {
         messageDiv.className = `message ${role}-message`;
 
         const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        
+
         if (role === 'user') {
+            avatar.className = 'message-avatar';
             avatar.innerHTML = '<i class="fas fa-user"></i>';
         } else {
             avatar.className = 'message-avatar bot';
-            if (window.createXeerLogo) {
-                const logo = window.createXeerLogo(false);
-                avatar.appendChild(logo);
-            } else {
-                avatar.innerHTML = '<div class="logo-icon-small">X</div>';
-            }
+            avatar.innerHTML = '<div class="logo-icon-small">X</div>';
         }
 
         const contentWrapper = document.createElement('div');
@@ -764,13 +728,11 @@ class AddOnChtHistryDBCpyBtn {
         }
 
         contentWrapper.appendChild(contentDiv);
-        
         const actionBar = this.createMessageActionBar(content, role);
         contentWrapper.appendChild(actionBar);
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(contentWrapper);
-        
         this.messagesDiv.appendChild(messageDiv);
 
         if (shouldScroll) this.scrollToBottom();
@@ -852,7 +814,6 @@ class AddOnChtHistryDBCpyBtn {
 
     scrollToBottom(force = false) {
         if (!this.messagesDiv) return;
-        
         if (force || !this.userScrolled) {
             requestAnimationFrame(() => {
                 this.messagesDiv.scrollTop = this.messagesDiv.scrollHeight;
@@ -869,7 +830,6 @@ class AddOnChtHistryDBCpyBtn {
         notification.textContent = message;
         
         const colors = { 'error': '#f44336', 'success': '#4caf50', 'info': '#2196f3' };
-        
         notification.style.cssText = `
             position: fixed;
             top: 80px;
@@ -913,6 +873,5 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 
-    // Initialize the app
     window.xeerGPT = new AddOnChtHistryDBCpyBtn();
 });

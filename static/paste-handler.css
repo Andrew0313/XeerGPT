@@ -2,23 +2,22 @@
    PASTE HANDLER — Polished Multi-Card UI
    ======================================== */
 
-/* ── Container: normal flow inside .input-container ── */
+/* ── Container ── */
 .paste-preview-container {
     width: 100%;
-    max-width: 768px;
-    margin: 0 auto 10px;
     opacity: 0;
     transform: translateY(4px);
     transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: none;
     max-height: 52vh;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: visible; /* FIX: was hidden, clipping right side */
     display: flex;
     flex-direction: column;
     gap: 4px;
     scrollbar-width: thin;
     scrollbar-color: var(--border-light) transparent;
+    box-sizing: border-box;
 }
 
 .paste-preview-container.active {
@@ -42,6 +41,8 @@
     border: 1px solid var(--border-light);
     border-radius: 10px;
     flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .paste-multi-info {
@@ -51,17 +52,20 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-primary);
+    min-width: 0;
 }
 
 .paste-multi-info i {
     color: var(--accent-primary);
     font-size: 0.85rem;
+    flex-shrink: 0;
 }
 
 .paste-multi-actions {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
 }
 
 .paste-multi-btn {
@@ -77,6 +81,8 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .paste-multi-btn:hover {
@@ -87,28 +93,25 @@
 
 .paste-multi-btn i { font-size: 0.7rem; }
 
-/* ── Cards wrapper ── */
-.paste-cards-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
 /* ── Individual card ── */
 .paste-preview-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: 10px;
-    overflow: hidden;
+    overflow: hidden; /* keeps border-radius on children */
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
     flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .paste-preview-card:hover {
     border-color: rgba(16, 163, 127, 0.4);
 }
 
-.paste-preview-card.collapsed .paste-preview-content { display: none; }
+.paste-preview-card.collapsed .paste-preview-content {
+    display: none;
+}
 
 .paste-preview-card.newest {
     border-color: var(--accent-primary);
@@ -116,24 +119,28 @@
     background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(16, 163, 127, 0.04) 100%);
 }
 
-/* ── Card header ── */
+/* ── Card header — THE KEY FIX ── */
 .paste-preview-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 9px 12px;
     gap: 8px;
     min-height: 42px;
+    width: 100%;
+    box-sizing: border-box;
+    /* FIX: no overflow:hidden here — that was eating the delete button */
 }
 
+/* FIX: title shrinks, actions stay */
 .paste-preview-title {
     display: flex;
     align-items: center;
-    gap: 7px;
-    flex: 1;
-    min-width: 0;
+    gap: 6px;
+    flex: 1 1 0%;   /* grow but shrink from zero base */
+    min-width: 0;   /* CRITICAL: allows flex child to shrink below content size */
     cursor: pointer;
     user-select: none;
+    overflow: hidden; /* clip overflow within title only */
 }
 
 .paste-preview-title:hover { opacity: 0.82; }
@@ -141,9 +148,10 @@
 .paste-preview-icon {
     color: var(--accent-primary);
     font-size: 0.9rem;
-    flex-shrink: 0;
+    flex-shrink: 0; /* icon never shrinks */
 }
 
+/* FIX: only the text label shrinks and truncates */
 .paste-preview-title > span:first-of-type {
     font-weight: 600;
     font-size: 0.845rem;
@@ -151,6 +159,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .paste-preview-badge {
@@ -181,6 +191,7 @@
     letter-spacing: 0.04em;
     flex-shrink: 0;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .paste-newest-badge {
@@ -193,13 +204,18 @@
     letter-spacing: 0.06em;
     flex-shrink: 0;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
+/* FIX: actions pinned to right, NEVER shrink, NEVER clip */
 .paste-preview-actions {
     display: flex;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
+    flex-grow: 0;
+    margin-left: auto;
+    padding-left: 6px; /* breathing room from title */
 }
 
 .paste-preview-action-btn {
@@ -216,6 +232,7 @@
     align-items: center;
     gap: 4px;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .paste-preview-action-btn:hover {
@@ -233,12 +250,15 @@
     transform: rotate(180deg);
 }
 
+/* FIX: delete button — guaranteed visible, guaranteed size */
 .paste-preview-close {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-light);
     border-radius: 6px;
     width: 26px;
     height: 26px;
+    min-width: 26px;
+    min-height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -304,10 +324,10 @@
     white-space: pre;
 }
 
-/* ── Animations ── */
+/* ── Card animation ── */
 @keyframes slideInCard {
     from { opacity: 0; transform: translateY(-6px) scale(0.99); }
-    to   { opacity: 1; transform: translateY(0)  scale(1); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .paste-preview-card.newest {
@@ -318,19 +338,16 @@
 [data-theme="light"] .paste-preview-container::-webkit-scrollbar-thumb { background: var(--border-dark); }
 [data-theme="light"] .paste-preview-container { scrollbar-color: var(--border-dark) transparent; }
 
-
 /* =====================================================
    SEND / STOP BUTTON SYSTEM
    ===================================================== */
 
-/* Wrapper holds both buttons, one shown at a time */
 .send-btn-wrap {
     position: relative;
     display: flex;
     flex-shrink: 0;
 }
 
-/* Send button */
 .send-btn {
     width: 40px;
     height: 40px;
@@ -357,7 +374,6 @@
     transform: none;
 }
 
-/* Stop button — hidden until streaming */
 .stop-btn {
     width: 40px;
     height: 40px;
@@ -375,7 +391,6 @@
     overflow: hidden;
 }
 
-/* Animated green ring while streaming */
 .stop-btn::before {
     content: '';
     position: absolute;
@@ -387,7 +402,7 @@
 }
 
 @keyframes stopRing {
-    0%, 100% { opacity: 0.7; transform: scale(1);    }
+    0%, 100% { opacity: 0.7; transform: scale(1); }
     50%       { opacity: 0.1; transform: scale(1.14); }
 }
 
@@ -404,7 +419,6 @@
 
 .stop-btn i { font-size: 0.88rem; }
 
-/* Toggle states */
 .send-btn-wrap.is-streaming .send-btn { display: none; }
 .send-btn-wrap.is-streaming .stop-btn { display: flex; }
 
@@ -413,9 +427,22 @@
     .paste-preview-container { max-height: 42vh; }
     .paste-preview-content   { max-height: 160px; }
     .paste-preview-action-btn span { display: none; }
-    .paste-multi-btn span           { display: none; }
+    .paste-multi-btn span { display: none; }
+    .paste-preview-language { display: none !important; }
+    .paste-newest-badge { display: none !important; }
 }
 
 @media (max-width: 480px) {
     .send-btn, .stop-btn { width: 36px; height: 36px; }
+    .paste-preview-badge { display: none; }
+}
+
+/* ── Positioning fix: paste container aligns with input wrapper width ── */
+/* The paste container sits ABOVE the input-wrapper inside input-container */
+/* It should match the input-wrapper's max-width and centering exactly   */
+.paste-preview-container {
+    max-width: 768px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 8px;
 }
