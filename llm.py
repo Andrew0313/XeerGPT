@@ -142,26 +142,17 @@ AVAILABLE_MODELS = {
     # DeepSeek Models (via OpenRouter - FREE!)
     "deepseek-chat": {
         "provider": "openrouter",
-        "model_id": "deepseek/deepseek-chat-v3-0324:free",
+        "model_id": "deepseek/deepseek-chat-v3-0324",
         "name": "DeepSeek Chat V3",
         "description": "Standard — General Tasks",
         "icon": "🌊"
     },
     "deepseek-r1": {
         "provider": "openrouter",
-        "model_id": "deepseek/deepseek-r1:free",
+        "model_id": "deepseek/deepseek-r1",
         "name": "DeepSeek Chat R1",
         "description": "Advanced — Math & Coding",
         "icon": "🧠"
-    },
-
-    # Google Models (via OpenRouter - FREE!)
-    "gemini-flash-2.0": {
-        "provider": "openrouter",
-        "model_id": "google/gemini-2.0-flash-exp:free",
-        "name": "Gemini 2.0 Flash",
-        "description": "Google — Fast & multimodal",
-        "icon": "🔮"
     },
     "hermes-3-405b-free": {
     "provider": "openrouter",
@@ -178,7 +169,7 @@ AVAILABLE_MODELS = {
         "model_id": "gemini-3-pro-preview",
         "name": "Gemini 3 Pro",
         "description": "Most powerful Gemini, agentic & multimodal",
-        "icon": "🌟"
+        "icon": "💎"
     },
     "gemini-2.5-pro": {
         "provider": "gemini",
@@ -186,14 +177,7 @@ AVAILABLE_MODELS = {
         "name": "Gemini 2.5 Pro",
         "description": "Deep reasoning, 1M context",
         "icon": "🔮"
-    },
-    "gemini-2.5-flash": {
-        "provider": "gemini",
-        "model_id": "gemini-2.5-flash",
-        "name": "Gemini 2.5 Flash",
-        "description": "Best price-performance, thinking support",
-        "icon": "💎"
-    },
+    }
 }
 
 
