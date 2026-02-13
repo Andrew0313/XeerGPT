@@ -125,7 +125,7 @@ AVAILABLE_MODELS = {
     "gpt-oss-120b": {
     "provider": "groq",
     "model_id": "openai/gpt-oss-120b",
-    "name": "GPT-OSS 120B",
+    "name": "CHATGPT 120B",
     "description": "OpenAI — Built-in web & code execution",
     "icon": "👑"
     },
