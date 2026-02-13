@@ -46,8 +46,8 @@ class AddOnChtHistryDBCpyBtn {
         this.messagesDiv.addEventListener('scroll', () => {
             const el = this.messagesDiv;
             const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-            // If user scrolled more than 100px from bottom, pause auto-scroll
-            this.userScrolled = distanceFromBottom > 100;
+            // If user scrolled more than 50px from bottom, pause auto-scroll
+            this.userScrolled = distanceFromBottom > 50;
             });
     
 
