@@ -1345,10 +1345,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (role === 'user') {
                 avatar.innerHTML = '<i class="fas fa-user"></i>';
             } else {
-                // Use animated logo for bot messages
+               // ✅ USE ANIMATED LOGO
                 avatar.className = 'message-avatar bot';
-                const logo = window.createXeerLogo(false); // Static for completed messages
-                avatar.appendChild(logo);
+                if (window.createXeerLogo) {
+                    const logo = window.createXeerLogo(false); // false = static
+                    avatar.appendChild(logo);
+                } else {
+                    avatar.innerHTML = '<div class="logo-icon-small">X</div>';
+                }
             }
 
             const contentWrapper = document.createElement('div');
@@ -1425,9 +1429,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar bot';
             
-            // Create ANIMATED logo
-            const logo = window.createXeerLogo(true); // true = animating
-            avatar.appendChild(logo);
+            // ✅ USE ANIMATED LOGO
+            if (window.createXeerLogo) {
+                const logo = window.createXeerLogo(true); // true = animating
+                avatar.appendChild(logo);
+            } else {
+                avatar.innerHTML = '<div class="logo-icon-small">X</div>';
+            }
 
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'message-content-wrapper';
@@ -1472,9 +1480,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 this.scrollToBottom();
                                 
                             } else if (data.type === 'done') {
-                                // ═══ STOP LOGO ANIMATION ═══
-                                messageDiv.classList.remove('streaming');
-                                window.stopLogoAnimation(logo);
+                                // ✅ STOP LOGO ANIMATION
+                                const logo = avatar.querySelector('.xeer-logo');
+                                if (logo && window.stopLogoAnimation) {
+                                    window.stopLogoAnimation(logo);
+                                }
                                 
                                 contentDiv.innerHTML = this.renderMarkdown(fullContent);
                                 setTimeout(() => {
