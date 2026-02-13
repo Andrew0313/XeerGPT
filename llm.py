@@ -72,54 +72,54 @@ if OPENAI_AVAILABLE:
 
 # VERIFIED WORKING MODELS
 AVAILABLE_MODELS = {
-    # Groq Models (Direct - Fastest, your own keys)
-    "llama-3.1-70b": {
+    # ── Groq Models (Direct - Fastest, your own keys) ─────────────────────
+    "llama-3.3-70b": {
         "provider": "groq",
-        "model_id": "llama-3.1-70b-versatile",
-        "name": "Llama 3.1 70B",
-        "description": "Best quality-Coding, General tasks",
+        "model_id": "llama-3.3-70b-versatile",   # ✅ replaces decommissioned llama-3.1-70b-versatile
+        "name": "Llama 3.3 70B",
+        "description": "Best quality — Coding, General tasks",
         "icon": "🦙"
     },
     "llama-3.1-8b": {
         "provider": "groq",
-        "model_id": "llama-3.1-8b-instant",
+        "model_id": "llama-3.1-8b-instant",       # ✅ still active
         "name": "Llama 3.1 8B",
         "description": "Ultra-fast, Simple tasks",
         "icon": "⚡"
     },
-    "llama-3.2-90b": {
+    "llama-4-scout": {
         "provider": "groq",
-        "model_id": "llama-3.2-90b-text-preview",
-        "name": "Llama 3.2 90B",
-        "description": "Most powerful, Complex-coding",
+        "model_id": "meta-llama/llama-4-scout-17b-16e-instruct",  # ✅ replaces decommissioned llama-3.2-90b-text-preview
+        "name": "Llama 4 Scout 17B",
+        "description": "Most powerful — Complex coding, Multimodal",
         "icon": "🚀"
     },
-    "mixtral-8x7b": {
+    "llama-4-maverick": {
         "provider": "groq",
-        "model_id": "mixtral-8x7b-32768",
-        "name": "Mixtral 8x7B",
-        "description": "Great Problem solver",
+        "model_id": "meta-llama/llama-4-maverick-17b-128e-instruct",  # ✅ new Llama 4 model
+        "name": "Llama 4 Maverick 17B",
+        "description": "128K context, Advanced reasoning",
         "icon": "🎯"
     },
-    
-    # OpenRouter Free Models - VERIFIED WORKING (no :free suffix needed!)
-    
+
+    # ── OpenRouter Free Models ─────────────────────────────────────────────
+
     # DeepSeek Models (via OpenRouter - FREE!)
     "deepseek-chat": {
         "provider": "openrouter",
         "model_id": "deepseek/deepseek-chat",
         "name": "DeepSeek Chat",
-        "description": "Almost unlimited Conversation",
+        "description": "Almost unlimited conversation",
         "icon": "🌊"
     },
     "deepseek-r1": {
         "provider": "openrouter",
         "model_id": "deepseek/deepseek-r1",
         "name": "DeepSeek R1",
-        "description": "Advanced Math-Coding",
+        "description": "Advanced Math & Coding",
         "icon": "🧠"
     },
-    
+
     # Google Gemini Models (via OpenRouter - FREE!)
     "gemini-flash-1.5": {
         "provider": "openrouter",
@@ -135,7 +135,7 @@ AVAILABLE_MODELS = {
         "description": "Most powerful Gemini",
         "icon": "🔮"
     },
-    
+
     # Meta Llama Models (via OpenRouter - FREE!)
     "llama-3.1-405b-free": {
         "provider": "openrouter",
@@ -148,7 +148,7 @@ AVAILABLE_MODELS = {
         "provider": "openrouter",
         "model_id": "meta-llama/llama-3.1-70b-instruct",
         "name": "Llama 3.1 70B",
-        "description": "Ultra Fast",
+        "description": "Ultra fast",
         "icon": "🦙"
     },
     "llama-3.2-3b-free": {
@@ -158,7 +158,7 @@ AVAILABLE_MODELS = {
         "description": "Super fast, Simple tasks",
         "icon": "⚡"
     },
-    
+
     # Other Great Free Models
     "qwen-2.5-72b-free": {
         "provider": "openrouter",
@@ -197,7 +197,7 @@ AVAILABLE_MODELS = {
     }
 }
 
-def chat_with_groq(message: str, model: str = "llama-3.1-70b-versatile") -> str:
+def chat_with_groq(message: str, model: str = "llama-3.3-70b-versatile") -> str:
     """Try all Groq keys until one works"""
     if not groq_clients:
         raise Exception("Groq not configured")
@@ -247,12 +247,12 @@ def chat_with_openrouter(message: str, model: str = "meta-llama/llama-3.1-70b-in
     
     raise Exception(f"All OpenRouter keys exhausted: {str(last_error)}")
 
-def llm_chat(message: str, model: str = "llama-3.1-70b") -> str:
+def llm_chat(message: str, model: str = "llama-3.3-70b") -> str:
     """Main chat function - routes to correct provider"""
     model_info = AVAILABLE_MODELS.get(model)
     if not model_info:
-        print(f"⚠️ Unknown model '{model}', using llama-3.1-70b")
-        return chat_with_groq(message, "llama-3.1-70b-versatile")
+        print(f"⚠️ Unknown model '{model}', using llama-3.3-70b")
+        return chat_with_groq(message, "llama-3.3-70b-versatile")
     
     provider = model_info["provider"]
     model_id = model_info["model_id"]

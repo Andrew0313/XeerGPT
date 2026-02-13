@@ -119,7 +119,7 @@ def chat():
         data = request.get_json()
         message = data.get("message", "")
         conversation_id = data.get("conversation_id")
-        model = data.get("model", "llama-3.1-70b")  # Default model
+        model = data.get("model", "llama-3.3-70b")  # Default model
         
         print(f"📨 Message: '{message[:50]}...'")
         print(f"📋 Conversation ID: {conversation_id}")
