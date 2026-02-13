@@ -1029,234 +1029,54 @@
 <script src="{{ url_for('static', filename='AddOn_ChtHistry_DB_CpyBtn.js') }}"></script>
 <script src="{{ url_for('static', filename='paste-handler.js') }}"></script>
 
+<!-- ═══════════════════════════════════════════════════════════════════════
+     ANIMATED LOGO HELPER FUNCTIONS
+     ═══════════════════════════════════════════════════════════════════════ -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // ===== FILE UPLOAD MANAGER =====
-    const fileUploadBtn = document.getElementById('fileUploadBtn');
-    const modalOverlay = document.getElementById('fileUploadModalOverlay');
-    const modalClose = document.getElementById('fileUploadModalClose');
-    const cancelBtn = document.getElementById('fileUploadCancelBtn');
-    const submitBtn = document.getElementById('fileUploadSubmitBtn');
-    const dropZone = document.getElementById('fileDropZone');
-    const browseBtn = document.getElementById('browseFilesBtn');
-    const fileInput = document.getElementById('fileInput');
-    const selectedFilesList = document.getElementById('selectedFilesList');
-    const attachedFilesRow = document.getElementById('attachedFilesRow');
+/**
+ * Creates the animated Xeer logo element
+ * @param {boolean} animated - Whether the logo should be animating
+ * @returns {HTMLElement} The logo element
+ */
+window.createXeerLogo = function(animated = false) {
+    const logo = document.createElement('div');
+    logo.className = animated ? 'xeer-logo animating' : 'xeer-logo static';
+    
+    const letter = document.createElement('span');
+    letter.className = 'xeer-letter';
+    letter.textContent = 'X';
+    
+    logo.appendChild(letter);
+    return logo;
+};
 
-    let pendingFiles = [];   // Files in modal not yet attached
-    let attachedFiles = [];  // Files confirmed and shown as chips
+/**
+ * Stops the logo animation and returns it to static state
+ * @param {HTMLElement} logo - The logo element to stop animating
+ */
+window.stopLogoAnimation = function(logo) {
+    if (!logo || !logo.classList) return;
+    
+    logo.classList.remove('animating');
+    logo.classList.add('static');
+    
+    console.log('⏹️ Logo animation stopped');
+};
 
-    function openModal() {
-        pendingFiles = [];
-        renderSelectedFiles();
-        modalOverlay.classList.add('active');
-    }
+/**
+ * Starts the logo animation
+ * @param {HTMLElement} logo - The logo element to start animating
+ */
+window.startLogoAnimation = function(logo) {
+    if (!logo || !logo.classList) return;
+    
+    logo.classList.remove('static');
+    logo.classList.add('animating');
+    
+    console.log('▶️ Logo animation started');
+};
+</script>
 
-    function closeModal() {
-        modalOverlay.classList.remove('active');
-        pendingFiles = [];
-        renderSelectedFiles();
-        fileInput.value = '';
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    function getFileIcon(file) {
-        if (file.type.startsWith('image/')) return 'fa-image';
-        if (file.type === 'application/pdf') return 'fa-file-pdf';
-        if (file.name.match(/\.(js|ts|jsx|tsx|py|html|css|json|xml|yaml|yml)$/i)) return 'fa-file-code';
-        if (file.name.match(/\.(csv)$/i)) return 'fa-file-csv';
-        return 'fa-file-alt';
-    }
-
-    function addFiles(fileList) {
-        Array.from(fileList).forEach(file => {
-            // 20MB limit
-            if (file.size > 20 * 1024 * 1024) {
-                alert(`"${file.name}" is too large. Max size is 20MB.`);
-                return;
-            }
-            // Avoid duplicates
-            if (!pendingFiles.find(f => f.name === file.name && f.size === file.size)) {
-                pendingFiles.push(file);
-            }
-        });
-        renderSelectedFiles();
-    }
-
-    function renderSelectedFiles() {
-        selectedFilesList.innerHTML = '';
-        submitBtn.disabled = pendingFiles.length === 0;
-
-        pendingFiles.forEach((file, index) => {
-            const item = document.createElement('div');
-            item.className = 'selected-file-item';
-
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'selected-file-thumb';
-                    item.insertBefore(img, item.firstChild);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const iconDiv = document.createElement('div');
-                iconDiv.className = 'selected-file-icon';
-                iconDiv.innerHTML = `<i class="fas ${getFileIcon(file)}"></i>`;
-                item.appendChild(iconDiv);
-            }
-
-            item.innerHTML += `
-                <div class="selected-file-info">
-                    <div class="selected-file-name">${file.name}</div>
-                    <div class="selected-file-size">${formatFileSize(file.size)}</div>
-                </div>
-                <button class="selected-file-remove" data-index="${index}" title="Remove">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-
-            item.querySelector('.selected-file-remove').addEventListener('click', () => {
-                pendingFiles.splice(index, 1);
-                renderSelectedFiles();
-            });
-
-            selectedFilesList.appendChild(item);
-        });
-    }
-
-    function attachFiles() {
-        pendingFiles.forEach(file => {
-            if (!attachedFiles.find(f => f.name === file.name && f.size === file.size)) {
-                attachedFiles.push(file);
-            }
-        });
-        renderAttachedChips();
-        closeModal();
-    }
-
-    function renderAttachedChips() {
-        attachedFilesRow.innerHTML = '';
-        if (attachedFiles.length === 0) {
-            attachedFilesRow.classList.remove('has-files');
-            return;
-        }
-        attachedFilesRow.classList.add('has-files');
-
-        attachedFiles.forEach((file, index) => {
-            const chip = document.createElement('div');
-            chip.className = 'attached-file-chip';
-
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    chip.insertBefore(img, chip.firstChild);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                chip.innerHTML = `<i class="fas ${getFileIcon(file)}"></i>`;
-            }
-
-            chip.innerHTML += `
-                <span class="attached-file-chip-name">${file.name}</span>
-                <button class="attached-file-chip-remove" data-index="${index}" title="Remove">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-
-            chip.querySelector('.attached-file-chip-remove').addEventListener('click', () => {
-                attachedFiles.splice(index, 1);
-                renderAttachedChips();
-            });
-
-            attachedFilesRow.appendChild(chip);
-        });
-    }
-
-    // Expose attached files so sendMessage can access them
-    window.getAttachedFiles = () => attachedFiles;
-    window.clearAttachedFiles = () => {
-        attachedFiles = [];
-        renderAttachedChips();
-    };
-
-    // Events
-    fileUploadBtn.addEventListener('click', openModal);
-    modalClose.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    submitBtn.addEventListener('click', attachFiles);
-
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) closeModal();
-    });
-
-    browseBtn.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-        addFiles(e.target.files);
-        fileInput.value = '';
-    });
-
-    // Drag & drop
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        addFiles(e.dataTransfer.files);
-    });
-
-    // Global drag & drop onto page
-    document.addEventListener('dragover', (e) => e.preventDefault());
-    document.addEventListener('drop', (e) => {
-        e.preventDefault();
-        if (e.dataTransfer.files.length > 0) {
-            addFiles(e.dataTransfer.files);
-            openModal();
-        }
-    });
-
-    // ===== WELCOME SCREEN BUTTONS =====
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('skip_welcome') === 'true') {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('messagesContainer').style.display = 'flex';
-        setTimeout(() => document.getElementById('userInput')?.focus(), 100);
-    }
-
-    document.querySelectorAll('.starter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const prompt = this.getAttribute('data-prompt');
-            if (window.xeerGPT?.userInput) {
-                window.xeerGPT.userInput.value = prompt;
-                window.xeerGPT.sendMessage();
-            }
-        });
-    });
-
-    document.querySelectorAll('.suggestion-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const prompt = this.getAttribute('data-prompt') || this.textContent;
-            if (window.xeerGPT?.userInput) {
-                window.xeerGPT.userInput.value = prompt;
-                window.xeerGPT.sendMessage();
-            }
-        });
-    });
-});
-</script>   
 <!-- ═══════════════════════════════════════════════════════════════════════
      INTEGRATION WITH CHAT SYSTEM - IMPROVED TIMING
      ═══════════════════════════════════════════════════════════════════════ -->
@@ -1524,5 +1344,234 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ===== FILE UPLOAD MANAGER =====
+    const fileUploadBtn = document.getElementById('fileUploadBtn');
+    const modalOverlay = document.getElementById('fileUploadModalOverlay');
+    const modalClose = document.getElementById('fileUploadModalClose');
+    const cancelBtn = document.getElementById('fileUploadCancelBtn');
+    const submitBtn = document.getElementById('fileUploadSubmitBtn');
+    const dropZone = document.getElementById('fileDropZone');
+    const browseBtn = document.getElementById('browseFilesBtn');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFilesList = document.getElementById('selectedFilesList');
+    const attachedFilesRow = document.getElementById('attachedFilesRow');
+
+    let pendingFiles = [];   // Files in modal not yet attached
+    let attachedFiles = [];  // Files confirmed and shown as chips
+
+    function openModal() {
+        pendingFiles = [];
+        renderSelectedFiles();
+        modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+        pendingFiles = [];
+        renderSelectedFiles();
+        fileInput.value = '';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function getFileIcon(file) {
+        if (file.type.startsWith('image/')) return 'fa-image';
+        if (file.type === 'application/pdf') return 'fa-file-pdf';
+        if (file.name.match(/\.(js|ts|jsx|tsx|py|html|css|json|xml|yaml|yml)$/i)) return 'fa-file-code';
+        if (file.name.match(/\.(csv)$/i)) return 'fa-file-csv';
+        return 'fa-file-alt';
+    }
+
+    function addFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            // 20MB limit
+            if (file.size > 20 * 1024 * 1024) {
+                alert(`"${file.name}" is too large. Max size is 20MB.`);
+                return;
+            }
+            // Avoid duplicates
+            if (!pendingFiles.find(f => f.name === file.name && f.size === file.size)) {
+                pendingFiles.push(file);
+            }
+        });
+        renderSelectedFiles();
+    }
+
+    function renderSelectedFiles() {
+        selectedFilesList.innerHTML = '';
+        submitBtn.disabled = pendingFiles.length === 0;
+
+        pendingFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'selected-file-item';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'selected-file-thumb';
+                    item.insertBefore(img, item.firstChild);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'selected-file-icon';
+                iconDiv.innerHTML = `<i class="fas ${getFileIcon(file)}"></i>`;
+                item.appendChild(iconDiv);
+            }
+
+            item.innerHTML += `
+                <div class="selected-file-info">
+                    <div class="selected-file-name">${file.name}</div>
+                    <div class="selected-file-size">${formatFileSize(file.size)}</div>
+                </div>
+                <button class="selected-file-remove" data-index="${index}" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            item.querySelector('.selected-file-remove').addEventListener('click', () => {
+                pendingFiles.splice(index, 1);
+                renderSelectedFiles();
+            });
+
+            selectedFilesList.appendChild(item);
+        });
+    }
+
+    function attachFiles() {
+        pendingFiles.forEach(file => {
+            if (!attachedFiles.find(f => f.name === file.name && f.size === file.size)) {
+                attachedFiles.push(file);
+            }
+        });
+        renderAttachedChips();
+        closeModal();
+    }
+
+    function renderAttachedChips() {
+        attachedFilesRow.innerHTML = '';
+        if (attachedFiles.length === 0) {
+            attachedFilesRow.classList.remove('has-files');
+            return;
+        }
+        attachedFilesRow.classList.add('has-files');
+
+        attachedFiles.forEach((file, index) => {
+            const chip = document.createElement('div');
+            chip.className = 'attached-file-chip';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    chip.insertBefore(img, chip.firstChild);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                chip.innerHTML = `<i class="fas ${getFileIcon(file)}"></i>`;
+            }
+
+            chip.innerHTML += `
+                <span class="attached-file-chip-name">${file.name}</span>
+                <button class="attached-file-chip-remove" data-index="${index}" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            chip.querySelector('.attached-file-chip-remove').addEventListener('click', () => {
+                attachedFiles.splice(index, 1);
+                renderAttachedChips();
+            });
+
+            attachedFilesRow.appendChild(chip);
+        });
+    }
+
+    // Expose attached files so sendMessage can access them
+    window.getAttachedFiles = () => attachedFiles;
+    window.clearAttachedFiles = () => {
+        attachedFiles = [];
+        renderAttachedChips();
+    };
+
+    // Events
+    fileUploadBtn.addEventListener('click', openModal);
+    modalClose.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    submitBtn.addEventListener('click', attachFiles);
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+    });
+
+    browseBtn.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        addFiles(e.target.files);
+        fileInput.value = '';
+    });
+
+    // Drag & drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        addFiles(e.dataTransfer.files);
+    });
+
+    // Global drag & drop onto page
+    document.addEventListener('dragover', (e) => e.preventDefault());
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length > 0) {
+            addFiles(e.dataTransfer.files);
+            openModal();
+        }
+    });
+
+    // ===== WELCOME SCREEN BUTTONS =====
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('skip_welcome') === 'true') {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('messagesContainer').style.display = 'flex';
+        setTimeout(() => document.getElementById('userInput')?.focus(), 100);
+    }
+
+    document.querySelectorAll('.starter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const prompt = this.getAttribute('data-prompt');
+            if (window.xeerGPT?.userInput) {
+                window.xeerGPT.userInput.value = prompt;
+                window.xeerGPT.sendMessage();
+            }
+        });
+    });
+
+    document.querySelectorAll('.suggestion-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const prompt = this.getAttribute('data-prompt') || this.textContent;
+            if (window.xeerGPT?.userInput) {
+                window.xeerGPT.userInput.value = prompt;
+                window.xeerGPT.sendMessage();
+            }
+        });
+    });
+});
+</script>   
 
 {% endblock %}
