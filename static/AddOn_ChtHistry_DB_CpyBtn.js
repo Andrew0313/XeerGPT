@@ -80,16 +80,13 @@ class AddOnChtHistryDBCpyBtn {
         this.modelDropdown.innerHTML = '';
         
         Object.entries(this.availableModels).forEach(([providerKey, providerData], index) => {
-            // Provider header
             const header = document.createElement('div');
             header.className = 'model-dropdown-header';
             
-            // Get the first model's icon for the provider header
             const firstModelIcon = Object.values(providerData.models)[0]?.icon || '🤖';
             header.innerHTML = `<span>${firstModelIcon}</span><span>${providerData.display_name}</span>`;
             this.modelDropdown.appendChild(header);
             
-            // Model group
             const group = document.createElement('div');
             group.className = 'model-group';
             
@@ -117,7 +114,6 @@ class AddOnChtHistryDBCpyBtn {
             
             this.modelDropdown.appendChild(group);
             
-            // Add divider between providers (except last)
             if (index < Object.keys(this.availableModels).length - 1) {
                 const divider = document.createElement('div');
                 divider.className = 'model-divider';
@@ -130,9 +126,8 @@ class AddOnChtHistryDBCpyBtn {
         this.selectedModel = modelKey;
         localStorage.setItem('xeergpt_selected_model', modelKey);
         
-        // Update UI
         this.updateSelectedModelDisplay(icon, name);
-        this.renderModelSelector(); // Re-render to update selected state
+        this.renderModelSelector();
         
         console.log(`🤖 Selected model: ${modelKey}`);
         this.showNotification(`Switched to ${name}`, 'success');
@@ -140,7 +135,6 @@ class AddOnChtHistryDBCpyBtn {
 
     updateSelectedModelDisplay(icon, name) {
         if (!icon || !name) {
-            // Find current model info
             for (const provider of Object.values(this.availableModels)) {
                 if (provider.models[this.selectedModel]) {
                     icon = provider.models[this.selectedModel].icon;
@@ -151,7 +145,6 @@ class AddOnChtHistryDBCpyBtn {
         }
         if (this.selectedModelIcon) this.selectedModelIcon.textContent = icon || '🤖';
         if (this.selectedModelName) {
-            // Shorten name for button
             const shortName = name ? name.replace('Gemini ', '').replace('Llama ', '').replace('DeepSeek ', '') : 'Model';
             this.selectedModelName.textContent = shortName;
         }
@@ -186,7 +179,6 @@ class AddOnChtHistryDBCpyBtn {
             transition: all 0.2s ease;
         `;
 
-        // Hover effect
         btn.addEventListener('mouseenter', () => {
             btn.style.background = 'var(--bg-tertiary)';
             btn.style.borderColor = 'var(--accent-primary)';
@@ -198,7 +190,6 @@ class AddOnChtHistryDBCpyBtn {
             btn.style.transform = 'scale(1)';
         });
 
-        // Click — snap to bottom and resume auto-scroll
         btn.addEventListener('click', () => {
             this.userScrolled = false;
             this.scrollToBottom(true);
@@ -206,7 +197,6 @@ class AddOnChtHistryDBCpyBtn {
 
         document.body.appendChild(btn);
 
-        // Show/hide based on scroll position
         if (this.messagesDiv) {
             this.messagesDiv.addEventListener('scroll', () => {
                 const el = this.messagesDiv;
@@ -223,11 +213,9 @@ class AddOnChtHistryDBCpyBtn {
             this.sendBtn.addEventListener('click', () => this.sendMessage());
         }
 
-        // ── Stop button: abort the active stream ──────────────────
         if (this.stopBtn) {
             this.stopBtn.addEventListener('click', () => this.stopStreaming());
         }
-        // ─────────────────────────────────────────────────────────
         
         if (this.userInput) {
             this.userInput.addEventListener('keydown', (e) => {
@@ -247,7 +235,6 @@ class AddOnChtHistryDBCpyBtn {
             this.newChatBtn.addEventListener('click', () => this.createNewChat());
         }
         
-        // Model selector toggle
         if (this.modelSelectorBtn) {
             this.modelSelectorBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -256,23 +243,19 @@ class AddOnChtHistryDBCpyBtn {
             });
         }
         
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.model-selector-dropdown')) this.closeModelDropdown();
         });
     }
 
-    // ── NEW: show the stop button, hide send ──────────────────────
     showStreamingState() {
         if (this.sendBtnWrap) this.sendBtnWrap.classList.add('is-streaming');
     }
 
-    // ── NEW: restore send button, hide stop ──────────────────────
     hideStreamingState() {
         if (this.sendBtnWrap) this.sendBtnWrap.classList.remove('is-streaming');
     }
 
-    // ── NEW: called when user clicks Stop ─────────────────────────
     stopStreaming() {
         if (this.currentAbortController) {
             this.currentAbortController.abort();
@@ -281,7 +264,6 @@ class AddOnChtHistryDBCpyBtn {
         this.hideStreamingState();
         this.hideTypingIndicator();
     }
-    // ─────────────────────────────────────────────────────────────
 
     setupMarkdown() {
         if (typeof marked === 'undefined') {
@@ -443,7 +425,7 @@ class AddOnChtHistryDBCpyBtn {
             this.messagesContainer.style.display = 'flex';
         }
 
-        this.displayMessage(message, 'user');
+        this.displayMessage(message || '[Pasted Code]', 'user');
         if (this.userInput) {
             this.userInput.value = '';
             this.userInput.style.height = 'auto';
@@ -465,14 +447,11 @@ class AddOnChtHistryDBCpyBtn {
                 this.displayMessage('Connection error. Please try again.', 'assistant');
             }
         }
-
     }
 
     async fetchBotResponseStreaming(message) {
-        // ── Create a fresh AbortController for this request ──────
         this.currentAbortController = new AbortController();
-        this.showStreamingState();   // show Stop button
-        // ─────────────────────────────────────────────────────────
+        this.showStreamingState();
 
         let response;
         try {
@@ -484,10 +463,9 @@ class AddOnChtHistryDBCpyBtn {
                     conversation_id: this.currentConversationId,
                     model: this.selectedModel
                 }),
-                signal: this.currentAbortController.signal,   // ← abort signal
+                signal: this.currentAbortController.signal,
             });
         } catch (err) {
-            // fetch itself was aborted (user clicked Stop before server responded)
             this.hideStreamingState();
             this.currentAbortController = null;
             if (err.name === 'AbortError') return;
@@ -502,7 +480,6 @@ class AddOnChtHistryDBCpyBtn {
 
         this.hideTypingIndicator();
         
-        // Create streaming message element
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message assistant-message streaming';
 
@@ -517,7 +494,6 @@ class AddOnChtHistryDBCpyBtn {
             avatar.innerHTML = '<div class="logo-icon-small">X</div>';
         }
 
-        // Create wrapper for content + copy button
         const contentWrapper = document.createElement('div');
         contentWrapper.className = 'message-content-wrapper';
 
@@ -531,7 +507,6 @@ class AddOnChtHistryDBCpyBtn {
         this.messagesDiv.appendChild(messageDiv);
         this.scrollToBottom();
 
-        // Read stream
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -588,7 +563,6 @@ class AddOnChtHistryDBCpyBtn {
                 }
             }
         } catch (err) {
-            // Stream read was aborted mid-way — finalise whatever we received
             if (err.name === 'AbortError') {
                 messageDiv.classList.remove('streaming');
                 
@@ -597,7 +571,6 @@ class AddOnChtHistryDBCpyBtn {
                 }
                 
                 if (fullContent) {
-                    // Show what was received + a "(stopped)" note
                     contentDiv.innerHTML = this.renderMarkdown(fullContent) +
                         '<p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px">' +
                         '<i class="fas fa-stop-circle"></i> Generation stopped</p>';
@@ -608,7 +581,6 @@ class AddOnChtHistryDBCpyBtn {
                     const actionBar = this.createMessageActionBar(fullContent, 'assistant');
                     contentWrapper.appendChild(actionBar);
                 } else {
-                    // Nothing received yet — remove the empty bubble
                     messageDiv.remove();
                 }
             } else {
@@ -634,13 +606,11 @@ class AddOnChtHistryDBCpyBtn {
         copyBtn.title = 'Copy';
         copyBtn.addEventListener('click', async () => {
             try {
-                // Strip HTML tags and get plain text
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = content;
                 const plainText = tempDiv.textContent || tempDiv.innerText || content;
                 await navigator.clipboard.writeText(plainText);
                 
-                // Visual feedback
                 const originalHTML = copyBtn.innerHTML;
                 copyBtn.innerHTML = '<i class="fas fa-check"></i>';
                 copyBtn.classList.add('active');
@@ -793,7 +763,6 @@ class AddOnChtHistryDBCpyBtn {
             contentDiv.textContent = content;
         }
 
-        // Add content to wrapper
         contentWrapper.appendChild(contentDiv);
         
         const actionBar = this.createMessageActionBar(content, role);
@@ -882,10 +851,8 @@ class AddOnChtHistryDBCpyBtn {
     }
 
     scrollToBottom(force = false) {
-    if (!this.messagesDiv) return;
-    
-        // force=true: always scroll (used when sending a new message)
-        // force=false: only scroll if user hasn't manually scrolled up
+        if (!this.messagesDiv) return;
+        
         if (force || !this.userScrolled) {
             requestAnimationFrame(() => {
                 this.messagesDiv.scrollTop = this.messagesDiv.scrollHeight;
