@@ -73,128 +73,82 @@ if OPENAI_AVAILABLE:
 # VERIFIED WORKING MODELS
 AVAILABLE_MODELS = {
     # ── Groq Models (Direct - Fastest, your own keys) ─────────────────────
+        "llama-3.1-8b": {
+        "provider": "groq",
+        "model_id": "llama-3.1-8b-instant",       # ✅ still active
+        "name": "Llama 3.1 8B",
+        "description": "Ultra-fast — Simple tasks",
+        "icon": "⚡"
+    },
     "llama-3.3-70b": {
         "provider": "groq",
         "model_id": "llama-3.3-70b-versatile",   # ✅ replaces decommissioned llama-3.1-70b-versatile
         "name": "Llama 3.3 70B",
-        "description": "Best quality — Coding, General tasks",
+        "description": "Fast — General tasks",
         "icon": "🦙"
-    },
-    "llama-3.1-8b": {
-        "provider": "groq",
-        "model_id": "llama-3.1-8b-instant",       # ✅ still active
-        "name": "Llama 3.1 8B",
-        "description": "Ultra-fast, Simple tasks",
-        "icon": "⚡"
     },
     "llama-4-scout": {
         "provider": "groq",
         "model_id": "meta-llama/llama-4-scout-17b-16e-instruct",  # ✅ replaces decommissioned llama-3.2-90b-text-preview
         "name": "Llama 4 Scout 17B",
-        "description": "Most powerful — Complex coding, Multimodal",
-        "icon": "🚀"
+        "description": "Powerful — Complex coding, Multimodal",
+        "icon": "🎯"
     },
     "llama-4-maverick": {
         "provider": "groq",
         "model_id": "meta-llama/llama-4-maverick-17b-128e-instruct",  # ✅ new Llama 4 model
         "name": "Llama 4 Maverick 17B",
-        "description": "128K context, Advanced reasoning",
-        "icon": "🎯"
+        "description": "Most powerful — Advanced Coding",
+        "icon": "🚀"
+    },
+    "gpt-oss-120b": {
+    "provider": "groq",
+    "model_id": "openai/gpt-oss-120b",
+    "name": "GPT-OSS 120B",
+    "description": "OpenAI — Built-in web & code execution",
+    "icon": "👑"
     },
 
+    "qwen3-32b": {
+    "provider": "groq",
+    "model_id": "qwen/qwen3-32b",
+    "name": "Qwen 3 32B",
+    "description": "Alibaba — Math, Chinese",
+    "icon": "🐉"
+    },
     # ── OpenRouter Free Models ─────────────────────────────────────────────
-
+    
     # DeepSeek Models (via OpenRouter - FREE!)
     "deepseek-chat": {
         "provider": "openrouter",
-        "model_id": "deepseek/deepseek-chat",
-        "name": "DeepSeek Chat",
-        "description": "Almost unlimited conversation",
+        "model_id": "deepseek/deepseek-chat-v3-0324:free",
+        "name": "DeepSeek Chat V3",
+        "description": "Standard — General Tasks",
         "icon": "🌊"
     },
     "deepseek-r1": {
         "provider": "openrouter",
-        "model_id": "deepseek/deepseek-r1",
-        "name": "DeepSeek R1",
-        "description": "Advanced Math & Coding",
+        "model_id": "deepseek/deepseek-r1:free",
+        "name": "DeepSeek Chat R1",
+        "description": "Advanced — Math & Coding",
         "icon": "🧠"
     },
 
-    # Google Gemini Models (via OpenRouter - FREE!)
-    "gemini-flash-1.5": {
+    # Google Models (via OpenRouter - FREE!)
+    "gemini-flash-2.0": {
         "provider": "openrouter",
-        "model_id": "google/gemini-flash-1.5",
-        "name": "Gemini Flash 1.5",
-        "description": "Fast & efficient",
-        "icon": "💎"
-    },
-    "gemini-pro-1.5": {
-        "provider": "openrouter",
-        "model_id": "google/gemini-pro-1.5",
-        "name": "Gemini Pro 1.5",
-        "description": "Most powerful Gemini",
+        "model_id": "google/gemini-2.0-flash-exp:free",
+        "name": "Gemini 2.0 Flash",
+        "description": "Google — Fast & multimodal",
         "icon": "🔮"
     },
-
-    # Meta Llama Models (via OpenRouter - FREE!)
-    "llama-3.1-405b-free": {
-        "provider": "openrouter",
-        "model_id": "meta-llama/llama-3.1-405b-instruct",
-        "name": "Llama 3.1 405B",
-        "description": "Largest Llama model!",
-        "icon": "🦙"
+    "hermes-3-405b-free": {
+    "provider": "openrouter",
+    "model_id": "nousresearch/hermes-3-llama-3.1-405b:free",
+    "name": "Hermes 3 405B",
+    "description": "Conversational, roleplay",
+    "icon": "✨"
     },
-    "llama-3.1-70b-free": {
-        "provider": "openrouter",
-        "model_id": "meta-llama/llama-3.1-70b-instruct",
-        "name": "Llama 3.1 70B",
-        "description": "Ultra fast",
-        "icon": "🦙"
-    },
-    "llama-3.2-3b-free": {
-        "provider": "openrouter",
-        "model_id": "meta-llama/llama-3.2-3b-instruct",
-        "name": "Llama 3.2 3B",
-        "description": "Super fast, Simple tasks",
-        "icon": "⚡"
-    },
-
-    # Other Great Free Models
-    "qwen-2.5-72b-free": {
-        "provider": "openrouter",
-        "model_id": "qwen/qwen-2.5-72b-instruct",
-        "name": "Qwen 2.5 72B",
-        "description": "Excellent Math, Chinese",
-        "icon": "🐉"
-    },
-    "gemma-2-27b-free": {
-        "provider": "openrouter",
-        "model_id": "google/gemma-2-27b-it",
-        "name": "Gemma 2 27B",
-        "description": "Google Open-Source model",
-        "icon": "💠"
-    },
-    "phi-3-medium-free": {
-        "provider": "openrouter",
-        "model_id": "microsoft/phi-3-medium-128k-instruct",
-        "name": "Phi-3 Medium",
-        "description": "Microsoft's medium model",
-        "icon": "🔷"
-    },
-    "mythomist-7b-free": {
-        "provider": "openrouter",
-        "model_id": "gryphe/mythomist-7b",
-        "name": "Mythomist 7B",
-        "description": "Creative writing",
-        "icon": "✨"
-    },
-    "nous-capybara-free": {
-        "provider": "openrouter",
-        "model_id": "nousresearch/nous-capybara-7b",
-        "name": "Nous Capybara",
-        "description": "Conversational, roleplay",
-        "icon": "🦫"
-    }
 }
 
 def chat_with_groq(message: str, model: str = "llama-3.3-70b-versatile") -> str:
