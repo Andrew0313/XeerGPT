@@ -31,6 +31,10 @@ class AddOnChtHistryDBCpyBtn {
         this.historyItems = document.getElementById('historyItems');
         this.newChatBtn = document.getElementById('newChatBtn');
         
+        // ── Stop button (added in chat.html inside .send-btn-wrap) ──
+        this.sendBtnWrap = document.getElementById('sendBtnWrap');
+        this.stopBtn     = document.getElementById('stopBtn');
+        
         // Model selector elements (beside send button)
         this.modelSelectorBtn = document.getElementById('modelSelectorBtn');
         this.modelDropdown = document.getElementById('modelDropdown');
@@ -66,11 +70,7 @@ class AddOnChtHistryDBCpyBtn {
             
             // Get the first model's icon for the provider header
             const firstModelIcon = Object.values(providerData.models)[0]?.icon || '🤖';
-            
-            header.innerHTML = `
-                <span>${firstModelIcon}</span>
-                <span>${providerData.display_name}</span>
-            `;
+            header.innerHTML = `<span>${firstModelIcon}</span><span>${providerData.display_name}</span>`;
             this.modelDropdown.appendChild(header);
             
             // Model group
@@ -80,9 +80,7 @@ class AddOnChtHistryDBCpyBtn {
             Object.entries(providerData.models).forEach(([modelKey, modelInfo]) => {
                 const item = document.createElement('div');
                 item.className = 'model-item';
-                if (modelKey === this.selectedModel) {
-                    item.classList.add('selected');
-                }
+                if (modelKey === this.selectedModel) item.classList.add('selected');
                 
                 item.innerHTML = `
                     <span class="model-item-icon">${modelInfo.icon}</span>
@@ -135,10 +133,7 @@ class AddOnChtHistryDBCpyBtn {
                 }
             }
         }
-        
-        if (this.selectedModelIcon) {
-            this.selectedModelIcon.textContent = icon || '🤖';
-        }
+        if (this.selectedModelIcon) this.selectedModelIcon.textContent = icon || '🤖';
         if (this.selectedModelName) {
             // Shorten name for button
             const shortName = name ? name.replace('Gemini ', '').replace('Llama ', '').replace('DeepSeek ', '') : 'Model';
@@ -147,18 +142,20 @@ class AddOnChtHistryDBCpyBtn {
     }
 
     closeModelDropdown() {
-        if (this.modelDropdown) {
-            this.modelDropdown.classList.remove('open');
-        }
-        if (this.modelSelectorBtn) {
-            this.modelSelectorBtn.classList.remove('open');
-        }
+        if (this.modelDropdown) this.modelDropdown.classList.remove('open');
+        if (this.modelSelectorBtn) this.modelSelectorBtn.classList.remove('open');
     }
 
     attachEventListeners() {
         if (this.sendBtn) {
             this.sendBtn.addEventListener('click', () => this.sendMessage());
         }
+
+        // ── Stop button: abort the active stream ──────────────────
+        if (this.stopBtn) {
+            this.stopBtn.addEventListener('click', () => this.stopStreaming());
+        }
+        // ─────────────────────────────────────────────────────────
         
         if (this.userInput) {
             this.userInput.addEventListener('keydown', (e) => {
@@ -189,11 +186,30 @@ class AddOnChtHistryDBCpyBtn {
         
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.model-selector-dropdown')) {
-                this.closeModelDropdown();
-            }
+            if (!e.target.closest('.model-selector-dropdown')) this.closeModelDropdown();
         });
     }
+
+    // ── NEW: show the stop button, hide send ──────────────────────
+    showStreamingState() {
+        if (this.sendBtnWrap) this.sendBtnWrap.classList.add('is-streaming');
+    }
+
+    // ── NEW: restore send button, hide stop ──────────────────────
+    hideStreamingState() {
+        if (this.sendBtnWrap) this.sendBtnWrap.classList.remove('is-streaming');
+    }
+
+    // ── NEW: called when user clicks Stop ─────────────────────────
+    stopStreaming() {
+        if (this.currentAbortController) {
+            this.currentAbortController.abort();
+            this.currentAbortController = null;
+        }
+        this.hideStreamingState();
+        this.hideTypingIndicator();
+    }
+    // ─────────────────────────────────────────────────────────────
 
     setupMarkdown() {
         if (typeof marked === 'undefined') {
@@ -235,19 +251,14 @@ class AddOnChtHistryDBCpyBtn {
         const newChatItem = document.createElement('div');
         newChatItem.className = 'history-item' + (this.currentConversationId === null ? ' active' : '');
         newChatItem.innerHTML = `<i class="fas fa-message"></i><span>New Conversation</span>`;
-        newChatItem.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.createNewChat();
-        });
+        newChatItem.addEventListener('click', (e) => { e.preventDefault(); this.createNewChat(); });
         this.historyItems.appendChild(newChatItem);
         
         if (conversations && conversations.length > 0) {
             conversations.forEach(conv => {
                 const item = document.createElement('div');
                 item.className = 'history-item';
-                if (conv.id === this.currentConversationId) {
-                    item.classList.add('active');
-                }
+                if (conv.id === this.currentConversationId) item.classList.add('active');
                 
                 item.innerHTML = `
                     <i class="fas fa-message"></i>
@@ -258,9 +269,7 @@ class AddOnChtHistryDBCpyBtn {
                 `;
                 
                 item.addEventListener('click', (e) => {
-                    if (!e.target.closest('.delete-chat-btn')) {
-                        this.loadConversation(conv.id);
-                    }
+                    if (!e.target.closest('.delete-chat-btn')) this.loadConversation(conv.id);
                 });
                 
                 const deleteBtn = item.querySelector('.delete-chat-btn');
@@ -289,9 +298,7 @@ class AddOnChtHistryDBCpyBtn {
             if (this.messagesContainer) this.messagesContainer.style.display = 'flex';
             
             if (data.messages && data.messages.length > 0) {
-                data.messages.forEach(msg => {
-                    this.displayMessage(msg.content, msg.role, false);
-                });
+                data.messages.forEach(msg => this.displayMessage(msg.content, msg.role, false));
             }
             
             this.updateSidebarActiveState();
@@ -309,27 +316,19 @@ class AddOnChtHistryDBCpyBtn {
             const newChatItem = this.historyItems?.querySelector('.history-item');
             if (newChatItem) newChatItem.classList.add('active');
         } else {
-            const activeItem = Array.from(this.historyItems?.children || []).find(
-                child => {
-                    const titleSpan = child.querySelector('.conversation-title');
-                    return titleSpan && parseInt(titleSpan.dataset.id) === this.currentConversationId;
-                }
-            );
+            const activeItem = Array.from(this.historyItems?.children || []).find(child => {
+                const titleSpan = child.querySelector('.conversation-title');
+                return titleSpan && parseInt(titleSpan.dataset.id) === this.currentConversationId;
+            });
             if (activeItem) activeItem.classList.add('active');
         }
     }
 
     async deleteConversation(conversationId) {
         if (!confirm('Delete this conversation?')) return;
-        
         try {
-            const response = await fetch(`/api/conversations/${conversationId}`, {
-                method: 'DELETE'
-            });
-            
-            if (conversationId === this.currentConversationId) {
-                this.createNewChat();
-            }
+            await fetch(`/api/conversations/${conversationId}`, { method: 'DELETE' });
+            if (conversationId === this.currentConversationId) this.createNewChat();
             this.loadConversations();
         } catch (error) {
             console.error('Error deleting conversation:', error);
@@ -352,24 +351,18 @@ class AddOnChtHistryDBCpyBtn {
     async sendMessage() {
         const message = this.userInput?.value.trim();
 
-        // Check if there's pasted content in the preview
+        // Merge any pasted snippets into the message
         let fullMessage = message;
         if (window.pasteHandler && window.pasteHandler.hasPastedContent()) {
             const pastedContent = window.pasteHandler.getPastedContent();
-            
-            // Combine pasted content with user message
-            if (message) {
-                fullMessage = `${message}\n\n\`\`\`\n${pastedContent}\n\`\`\``;
-            } else {
-                fullMessage = `\`\`\`\n${pastedContent}\n\`\`\``;
-            }
-            
-            // Clear the preview
-            window.pasteHandler.hidePreview();
+            fullMessage = message
+                ? `${message}\n\n${pastedContent}`
+                : pastedContent;
+            window.pasteHandler.hidePreview?.();
             window.pasteHandler.clearPastedContent();
         }
 
-        if (!message || this.isTyping) return;
+        if (!fullMessage || this.isTyping) return;
 
         console.log(`📤 Sending with model: ${this.selectedModel}`);
 
@@ -387,28 +380,51 @@ class AddOnChtHistryDBCpyBtn {
         this.showTypingIndicator();
 
         try {
-            await this.fetchBotResponseStreaming(message);
+            // ── CHANGED: pass fullMessage (with pasted content) ──
+            await this.fetchBotResponseStreaming(fullMessage);
         } catch (error) {
             this.hideTypingIndicator();
+            this.hideStreamingState();               // ← restore Send button on error
             console.error('❌ Chat error:', error);
-            this.displayMessage('Connection error. Please try again.', 'assistant');
+            if (error.name !== 'AbortError') {
+                this.displayMessage('Connection error. Please try again.', 'assistant');
+            }
         }
 
         this.scrollToBottom();
     }
 
     async fetchBotResponseStreaming(message) {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: message,
-                conversation_id: this.currentConversationId,
-                model: this.selectedModel
-            }),
-        });
+        // ── Create a fresh AbortController for this request ──────
+        this.currentAbortController = new AbortController();
+        this.showStreamingState();   // show Stop button
+        // ─────────────────────────────────────────────────────────
 
-        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        let response;
+        try {
+            response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    conversation_id: this.currentConversationId,
+                    model: this.selectedModel
+                }),
+                signal: this.currentAbortController.signal,   // ← abort signal
+            });
+        } catch (err) {
+            // fetch itself was aborted (user clicked Stop before server responded)
+            this.hideStreamingState();
+            this.currentAbortController = null;
+            if (err.name === 'AbortError') return;
+            throw err;
+        }
+
+        if (!response.ok) {
+            this.hideStreamingState();
+            this.currentAbortController = null;
+            throw new Error(`Server error: ${response.status}`);
+        }
 
         this.hideTypingIndicator();
         
@@ -440,52 +456,75 @@ class AddOnChtHistryDBCpyBtn {
         let buffer = '';
         let fullContent = '';
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n\n');
-            buffer = lines.pop();
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop();
 
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = JSON.parse(line.slice(6));
-                    
-                    if (data.type === 'conversation_id') {
-                        const wasNew = this.currentConversationId === null;
-                        this.currentConversationId = data.conversation_id;
-                        if (wasNew) await this.loadConversations();
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.slice(6));
                         
-                    } else if (data.type === 'content') {
-                        fullContent += data.content;
-                        contentDiv.innerHTML = this.renderMarkdown(fullContent) + '<span class="typing-cursor">▋</span>';
-                        this.scrollToBottom();
-                        
-                    } else if (data.type === 'done') {
-                        contentDiv.innerHTML = this.renderMarkdown(fullContent);
-                        setTimeout(() => {
-                            this.addCopyButtons(contentDiv);
-                            this.highlightCode(contentDiv);
-                        }, 0);
-                        
-                        // ADD MESSAGE COPY BUTTON BELOW CONTENT
-                        const copyBtn = this.createMessageCopyButton(fullContent);
-                        contentWrapper.appendChild(copyBtn);
-                        
-                    } else if (data.type === 'error') {
-                        contentDiv.innerHTML = this.renderMarkdown(data.message);
-                        
-                        // Add copy button even for errors
-                        const copyBtn = this.createMessageCopyButton(data.message);
-                        contentWrapper.appendChild(copyBtn);
+                        if (data.type === 'conversation_id') {
+                            const wasNew = this.currentConversationId === null;
+                            this.currentConversationId = data.conversation_id;
+                            if (wasNew) await this.loadConversations();
+                            
+                        } else if (data.type === 'content') {
+                            fullContent += data.content;
+                            contentDiv.innerHTML = this.renderMarkdown(fullContent) + '<span class="typing-cursor">▋</span>';
+                            this.scrollToBottom();
+                            
+                        } else if (data.type === 'done') {
+                            contentDiv.innerHTML = this.renderMarkdown(fullContent);
+                            setTimeout(() => {
+                                this.addCopyButtons(contentDiv);
+                                this.highlightCode(contentDiv);
+                            }, 0);
+                            const copyBtn = this.createMessageCopyButton(fullContent);
+                            contentWrapper.appendChild(copyBtn);
+                            
+                        } else if (data.type === 'error') {
+                            contentDiv.innerHTML = this.renderMarkdown(data.message);
+                            const copyBtn = this.createMessageCopyButton(data.message);
+                            contentWrapper.appendChild(copyBtn);
+                        }
                     }
                 }
             }
+        } catch (err) {
+            // Stream read was aborted mid-way — finalise whatever we received
+            if (err.name === 'AbortError') {
+                if (fullContent) {
+                    // Show what was received + a "(stopped)" note
+                    contentDiv.innerHTML = this.renderMarkdown(fullContent) +
+                        '<p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px">' +
+                        '<i class="fas fa-stop-circle"></i> Generation stopped</p>';
+                    setTimeout(() => {
+                        this.addCopyButtons(contentDiv);
+                        this.highlightCode(contentDiv);
+                    }, 0);
+                    const copyBtn = this.createMessageCopyButton(fullContent);
+                    contentWrapper.appendChild(copyBtn);
+                } else {
+                    // Nothing received yet — remove the empty bubble
+                    messageDiv.remove();
+                }
+            } else {
+                throw err;
+            }
+        } finally {
+            // ── Always restore Send button when done ─────────────
+            this.hideStreamingState();
+            this.currentAbortController = null;
+            // ─────────────────────────────────────────────────────
         }
     }
 
-    // NEW METHOD: Create message copy button
     createMessageCopyButton(content) {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'message-copy-btn';
@@ -534,16 +573,14 @@ class AddOnChtHistryDBCpyBtn {
         searchDiv.id = 'universalSearchIndicator';
         
         const searchTypes = {
-            'concert': { icon: '🎵', text: 'Searching for concerts' },
-            'event': { icon: '🎪', text: 'Searching for events' },
+            'concert':     { icon: '🎵', text: 'Searching for concerts' },
+            'event':       { icon: '🎪', text: 'Searching for events' },
             'information': { icon: '🔍', text: 'Searching' }
         };
         
         const searchInfo = searchTypes[searchType] || searchTypes['information'];
         let searchText = searchInfo.text;
-        if (query && query.trim()) {
-            searchText += ` for "${query}"`;
-        }
+        if (query && query.trim()) searchText += ` for "${query}"`;
         searchText += '...';
         
         searchDiv.innerHTML = `
@@ -551,9 +588,7 @@ class AddOnChtHistryDBCpyBtn {
                 <div class="search-icon">${searchInfo.icon}</div>
                 <div class="search-text">${searchText}</div>
                 <div class="search-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                    <span></span><span></span><span></span>
                 </div>
                 <div class="search-timer" id="searchTimer">
                     <i class="fas fa-clock"></i>
@@ -573,36 +608,24 @@ class AddOnChtHistryDBCpyBtn {
         this.scrollToBottom(true);
         
         const cancelBtn = document.getElementById('cancelSearchBtn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.cancelSearch());
-        }
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.cancelSearch());
         
         this.startSearchTimer();
     }
 
     startSearchTimer() {
-        if (this.searchTimerInterval) {
-            clearInterval(this.searchTimerInterval);
-        }
-        
+        if (this.searchTimerInterval) clearInterval(this.searchTimerInterval);
         this.searchTimerInterval = setInterval(() => {
             const timerElement = document.getElementById('searchTimer');
-            if (!timerElement) {
-                clearInterval(this.searchTimerInterval);
-                return;
-            }
-            
+            if (!timerElement) { clearInterval(this.searchTimerInterval); return; }
             const elapsed = (Date.now() - this.searchStartTime) / 1000;
             const timerText = timerElement.querySelector('.timer-text strong');
-            if (timerText) {
-                timerText.textContent = elapsed.toFixed(1) + 's';
-            }
+            if (timerText) timerText.textContent = elapsed.toFixed(1) + 's';
         }, 100);
     }
 
     hideSearchIndicator() {
         this.isSearching = false;
-        
         if (this.searchTimerInterval) {
             clearInterval(this.searchTimerInterval);
             this.searchTimerInterval = null;
@@ -610,7 +633,7 @@ class AddOnChtHistryDBCpyBtn {
         
         const indicator = document.getElementById('universalSearchIndicator');
         if (indicator) {
-            const finalTime = this.searchStartTime 
+            const finalTime = this.searchStartTime
                 ? ((Date.now() - this.searchStartTime) / 1000).toFixed(2)
                 : '0.0';
             
@@ -653,10 +676,7 @@ class AddOnChtHistryDBCpyBtn {
             const response = await fetch('/api/concerts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    date: date || '',
-                    keywords: keywords || ''
-                }),
+                body: JSON.stringify({ date: date || '', keywords: keywords || '' }),
                 signal: this.currentAbortController.signal
             });
             
@@ -675,19 +695,14 @@ class AddOnChtHistryDBCpyBtn {
                     concertHTML += `📅 **Date:** ${event.date}\n\n`;
                     concertHTML += `📍 **Venue:** ${event.venue}${event.city ? ', ' + event.city : ''}\n\n`;
                     concertHTML += `🔗 **[Get Tickets](${event.url})**\n\n`;
-                    if (index < data.events.length - 1) {
-                        concertHTML += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-                    }
+                    if (index < data.events.length - 1) concertHTML += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
                 });
-                
                 this.displayMessage(concertHTML, 'assistant');
             } else {
-                const message = data.message || "Sorry, I couldn't find any concerts matching your search.";
-                this.displayMessage(message, 'assistant');
+                this.displayMessage(data.message || "Sorry, I couldn't find any concerts matching your search.", 'assistant');
             }
         } catch (error) {
             if (error.name === 'AbortError') return;
-            
             this.hideSearchIndicator();
             this.currentAbortController = null;
             this.displayMessage("Sorry, I encountered an error while searching for concerts.", 'assistant');
@@ -703,8 +718,8 @@ class AddOnChtHistryDBCpyBtn {
 
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.innerHTML = role === 'user' 
-            ? '<i class="fas fa-user"></i>' 
+        avatar.innerHTML = role === 'user'
+            ? '<i class="fas fa-user"></i>'
             : '<div class="logo-icon-small">X</div>';
 
         // Create wrapper for content + copy button
@@ -746,9 +761,7 @@ class AddOnChtHistryDBCpyBtn {
                 gfm: true,
                 highlight: function(code, lang) {
                     if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
-                        try {
-                            return hljs.highlight(code, { language: lang }).value;
-                        } catch (e) {}
+                        try { return hljs.highlight(code, { language: lang }).value; } catch (e) {}
                     }
                     return code;
                 }
@@ -798,9 +811,7 @@ class AddOnChtHistryDBCpyBtn {
 
     highlightCode(container) {
         if (typeof hljs !== 'undefined') {
-            container.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
+            container.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
         }
     }
 
@@ -832,11 +843,7 @@ class AddOnChtHistryDBCpyBtn {
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
         
-        const colors = {
-            'error': '#f44336',
-            'success': '#4caf50',
-            'info': '#2196f3'
-        };
+        const colors = { 'error': '#f44336', 'success': '#4caf50', 'info': '#2196f3' };
         
         notification.style.cssText = `
             position: fixed;
@@ -873,13 +880,12 @@ document.addEventListener('DOMContentLoaded', () => {
     style.textContent = `
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            to   { transform: translateX(0);    opacity: 1; }
         }
         @keyframes fadeOut {
             from { opacity: 1; }
-            to { opacity: 0; }
+            to   { opacity: 0; }
         }
-        /* Typing cursor animation */
         .typing-cursor {
             display: inline-block;
             color: var(--accent-primary);
@@ -887,10 +893,9 @@ document.addEventListener('DOMContentLoaded', () => {
             margin-left: 2px;
             font-weight: bold;
         }
-        
         @keyframes blink {
-            0%, 50% { opacity: 0; }
-            51%, 100% { opacity: 0; }
+            0%, 49%  { opacity: 1; }
+            50%, 100% { opacity: 0; }
         }
     `;
     document.head.appendChild(style);
