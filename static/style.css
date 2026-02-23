@@ -690,3 +690,93 @@ code {
 .mb-2 { margin-bottom: var(--spacing-sm); }
 .mb-3 { margin-bottom: var(--spacing-md); }
 .mb-4 { margin-bottom: var(--spacing-lg); }
+
+/* Music Player Button Styles */
+
+/* Option 1 Style - Top Bar Button */
+.music-player-btn {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+}
+
+.music-player-btn:hover {
+    background: var(--hover-bg);
+    color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+/* Option 2 Style - Sidebar Footer Button */
+.footer-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-btn {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-btn:hover {
+    background: var(--hover-bg);
+    color: var(--accent-color);
+}
+
+/* Option 3 Style - Quick Access Bar */
+.music-player-quick {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.music-quick-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.music-quick-btn i {
+    font-size: 1.2rem;
+}
+
+.music-quick-btn:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* For collapsed sidebar */
+.sidebar.collapsed .music-quick-btn span {
+    display: none;
+}
+
+.sidebar.collapsed .music-quick-btn {
+    justify-content: center;
+    padding: 10px;
+}
+
+.sidebar.collapsed .music-quick-btn i {
+    margin: 0;
+    font-size: 1.3rem;
+}

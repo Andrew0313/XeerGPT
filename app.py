@@ -20,6 +20,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+# Import and initialize music player routes
+try:
+    from music_player_routes import init_music_player_routes
+    init_music_player_routes(app)
+    print("=" * 50)
+    print("✅ MUSIC PLAYER ROUTES LOADED SUCCESSFULLY")
+    print("=" * 50)
+except Exception as e:
+    print("=" * 50)
+    print(f"❌ ERROR LOADING MUSIC PLAYER: {e}")
+    print("=" * 50)
+
 # Create tables (including new UsageTracking table)
 with app.app_context():
     db.create_all()
